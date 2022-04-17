@@ -82,8 +82,8 @@ module BasicUtils
   end
 
   def exit_game?
-    answer = 'n' # gets_message('Do you want to finish the game? (y/n)')
-    answer = 'y' if @rounds == 20
+    answer = gets_message('Do you want to finish the game? (y/n)')
+    p answer
     answer = gets_message('please enter a valid option: (y/n)') while answer != 'y' && answer != 'n'
     answer == 'y'
   end
@@ -118,7 +118,7 @@ class MaterMind
     enter_name
     unless @guesser_state
       puts 'Please enter a code so that the machine can guess it'
-      @secret_code = generate_random_code # 'abcd' # parse_code(gets.chomp).join
+      parse_code(gets.chomp).join
     end
     puts "\n \tLet the game begin #{@users[0].name}!!"
   end
@@ -247,7 +247,7 @@ class MaterMind
       @secret_code = generate_random_code
     else
       puts 'Please enter a code so that the machine can guess it'
-      @secret_code = generate_random_code # parse_code(gets.chomp).join
+      @secret_code = parse_code(gets.chomp).join
     end
   end
 
@@ -263,7 +263,7 @@ class MaterMind
   end
 
   def gueeser?
-    answer = '2' # gets_message('Do you want to be the guesser (1) or the code creator (2)')
+    answer = gets_message('Do you want to be the guesser (1) or the code creator (2)')
     answer = gets_message('please enter a valid option: 1 or 2') while answer != '1' && answer != '2'
     @guesser_state = answer == '1'
     @guesser_state
