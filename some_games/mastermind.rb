@@ -117,6 +117,7 @@ class MaterMind
   def prepare_game
     enter_name
     unless @guesser_state
+      @table.draw_table
       puts 'Please enter a code so that the machine can guess it'
       parse_code(gets.chomp).join
     end
@@ -221,11 +222,20 @@ class MaterMind
     ('a'..'h').to_a.sample(4).join
   end
 
+  def draw_change
+    if @guesser_state
+      @table.draw_table
+    else
+      @table.draw_color_table
+      puts "The machine is planning the next guess ...  buahaha \n\n"
+    end
+  end
+
   def play_movement(number)
-    @table.draw_table
+    draw_change
     input = receive_movement_input(number)
     update_table_after_movement(input, number)
-    @table.draw_table
+    draw_change
     input
   end
 
@@ -246,6 +256,7 @@ class MaterMind
     if @guesser_state
       @secret_code = generate_random_code
     else
+      @table.draw_color_picker
       puts 'Please enter a code so that the machine can guess it'
       @secret_code = parse_code(gets.chomp).join
     end

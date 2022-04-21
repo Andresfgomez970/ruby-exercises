@@ -56,17 +56,27 @@ class Table
   end
 end
 
+# Basic utils module
+module BasicUtils
+  def gets_message(message)
+    puts message
+    gets.chomp
+  end
+end
+
+
 # Class that has all the functionalities of the game
 class TicTacToe
+  include BasicUtils
+
   def initialize
     @users = []
     @table = Table.new
   end
 
   def enter_name(symbol)
-    puts "Plase enter the name of the first player to play (#{symbol})"
-    name1 = gets.chomp
-    @users.push(TicTacToeUser.new(name1, 'x'))
+    name1 = gets_message("Plase enter the name of the first player to play (#{symbol})")
+    @users.push(TicTacToeUser.new(name1, symbol))
   end
 
   def prepare_game
@@ -81,18 +91,16 @@ class TicTacToe
   end
 
   def chosen_number
-    puts 'Please enter a number'
-    number = gets.chomp
+    number = gets_message('Please enter a number')
     until number.match?(/^[0-9]$/) && @table.symbols.include?(number.to_i)
-      puts 'Please select a valid number'
-      number = gets.chomp
+      number = gets_message('Please select a valid number')
     end
     number.to_i
   end
 
   def update_scores
     ## condition to select winner
-    @users.each_with_index do |user, i|  
+    @users.each_with_index do |user, i|
       @users[i].score = (user.mark == someone_won ? user.score + 1 : user.score)
     end
   end
@@ -125,27 +133,22 @@ class TicTacToe
   end
 
   def exit_game?(answer)
-    while answer != 'y' && answer != 'n'
-      puts 'please enter a valid option: (y/n)'
-      answer = gets.chomp
-    end
-
+    puts 'Do you want to finish the game? (y/n)'
+    answer = gets_message('please enter a valid option: (y/n)') while answer != 'y' && answer != 'n'
     answer == 'y'
   end
 
   def reset_for_new_game
     @table.symbols = (1..9).to_a
     @users.each_with_index { |user, i| @users[i].mark = (user.mark == 'x' ? 'o' : 'x') }
-    begin_user_name = @users.filter_map{ |user| user.name if user.mark == 'x' }
+    begin_user_name = @users.filter_map { |user| user.name if user.mark == 'x' }
     puts "\nNow user #{begin_user_name[0]} begins"
   end
 
   def play_recursive
     play_round
-    puts 'Do you want to finish the game? (y/n)'
-    exit_game = exit_game?(gets.chomp)
 
-    if exit_game
+    if exit_game?(gets.chomp)
       end_game
     else
       reset_for_new_game
@@ -167,8 +170,6 @@ class TicTacToe
     winner = winner_user
     if winner.nil? && @users[0].score != 0
       "Wow! That's a tie"
-    elsif winner.nil? && @users[0].score.zero?
-      "But you didn't even play!!!"
     else
       "The winner is #{winner_user}; congrats!!!"
     end
