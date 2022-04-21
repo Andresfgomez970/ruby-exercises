@@ -30,7 +30,9 @@ contents = CSV.open(
   headers: true,  
   header_converters: :symbol)
 
-erb_letter = File.read_safe('form_letter.erb')
+
+template_letter = File.read_safe('form_letter.erb')
+erb_template = ERB.new template_letter
 
 contents.each do |row|
   name = row[:first_name]
