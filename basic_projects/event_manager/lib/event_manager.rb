@@ -80,7 +80,6 @@ def create_thanks_htmls()
   end
 end
 
-
 file_name = "event_attendees.csv"
 contents = CSV.open(
   file_name, 
@@ -89,12 +88,9 @@ contents = CSV.open(
 
 dates = contents.each.map {|row| clean_regdate(row[:regdate]) } 
 
-hours = dates.map { |date| date.hour }.tally 
-peak_hours = hours.sort_by{|k, v| v * -1}.transpose[0]
+peak_hours = dates.map(&:hour).tally.sort_by{|k, v| v * -1}.transpose[0]
 puts "Peak hours in order: #{peak_hours}"
 
-days = dates.map {|date| date.wday}.tally
-peak_days = days.sort_by{|k, v| v * -1}.transpose[0]
+peak_days = dates.map(&:wday).tally.sort_by{|k, v| v * -1}.transpose[0]
 days = ["Sunday", "Monday", "Tuesday", "Wendsday", "Thursday", "Friday", "Saturday"]
-
 puts "Peak days in order: #{peak_days.map { |day_i| days[day_i] } }"
