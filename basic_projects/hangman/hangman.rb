@@ -1,0 +1,230 @@
+# frozen_string_literal: true
+
+# User class to save people playing
+class User
+  ##
+  # This is a basic user class
+  attr_accessor :name, :score
+
+  def initialize(name)
+    @name = name
+    @score = 0
+  end
+end
+
+# Extend index method
+class String
+  def indices(str_to_match)
+    result = []
+    offset = 0
+    index = self.index(str_to_match, offset)
+    until index.nil?
+      result.push(index)
+      offset = index + str_to_match.length
+      index = self.index(str_to_match, offset)
+    end
+    result
+  end
+end
+
+# Basic utils module
+module BasicUtils
+  def gets_message(message)
+    puts message
+    gets.chomp
+  end
+
+  def another_round?
+    answer = gets_message('Do you want to play another round? (y/n)')
+    answer = gets_message('Please enter a valid option: (y/n)') while answer != 'y' && answer != 'n'
+    answer == 'n'
+  end
+end
+
+# This class will include all functionalities to draw a hangman name
+class HangManDraw
+  def initialize
+    @wrong_number = 0
+    @max_wrong = 9
+    @init_game = 1
+  end
+
+  def down_platform
+    @wrong_number.positive? ? '......................' : '                       '
+  end
+
+  def platform_stick
+    @wrong_number > 1 ? '.' : ' '
+  end
+
+  def middle_spaces
+    '         '
+  end
+
+  def over_platform
+    rope_part = @wrong_number > 2 ? '.' : ''
+    result = @wrong_number > 2 ? '...........' : ''
+    3.times { result += "\n#{platform_stick}#{middle_spaces}#{rope_part}" }
+    result
+  end
+
+  def head
+    res = "#{platform_stick}#{middle_spaces}"
+    @wrong_number > 3 ? "#{res}o" : "#{res} "
+  end
+
+  def arms
+    res = "#{platform_stick}#{middle_spaces[0, middle_spaces.length / 2]}"
+    if @wrong_number == 4
+      "#{res}......"
+    elsif @wrong_number > 4 && @wrong_number < 9
+      "#{res}..........."
+    elsif @wrong_number == 9
+      "#{res}........... \t DEAD!!! YOU HAVE LOST! :("
+    else
+      res.to_s
+    end
+  end
+
+  def torso
+    torso_part = @wrong_number > 5 ? '.' : ' '
+    result = ''
+    4.times { result += "#{platform_stick}#{middle_spaces}#{torso_part}\n" }
+    result
+  end
+
+  def legs
+    right_leg = @wrong_number > 6 ? '.' : ' '
+    left_leg = @wrong_number > 7 ? '.' : ' '
+    res = ''
+    res += "#{platform_stick}#{' ' * (middle_spaces.length - 1)}#{left_leg} #{right_leg}\n"
+    res += "#{platform_stick}#{' ' * (middle_spaces.length - 2)}#{left_leg}   #{right_leg}"
+    res
+  end
+
+  def welcome_mesage
+    if @init_game == 1
+      @init_game = 0
+      'Welcome to hangman game and thanks for playing'
+    else
+      "\n"
+    end
+  end
+
+  def draw_body
+    puts welcome_mesage
+    puts over_platform
+    puts head
+    puts arms
+    puts torso
+    puts legs
+    puts down_platform
+  end
+end
+
+# Main class that contains the game
+class Hangman < HangManDraw
+  include BasicUtils
+
+  def initialize(word_file = 'google-10000-english-no-swears.txt')
+    super()
+    @word_file = File.open(word_file)
+    @n_lines = @word_file.count
+    @round_word = select_random_word
+    @guessed_word = '_' * @round_word.length
+    @users = []
+    @rounds = 0
+  end
+
+  def select_random_word
+    @word_file.rewind
+    rand(1..@n_lines).times { @word_file.readline }
+    @word_file.readline.gsub("\n", '')
+  end
+
+  def draw_word_picker
+    to_print_characters = @guessed_word.split('')
+    to_print_word = to_print_characters.reduce('') { |to_print, char| to_print + "#{char} " }
+    puts "\n#{to_print_word}\n\n"
+  end
+
+  def draw_final_mesage
+    match_condition = @guessed_word == @round_word
+    puts 'Congrats!! You have won!' if match_condition
+    puts "Try again! The correct word was #{@round_word}" if !match_condition && @wrong_number == @max_wrong
+  end
+
+  def draw_board
+    draw_body
+    draw_word_picker
+    draw_final_mesage
+  end
+
+  def enter_name
+    name = "andres" # gets_message('Plase enter the name of the player to play')
+    @users.push(User.new(name))
+  end
+
+  def update_game_state(char)
+    matches = @round_word.indices(char)
+    matches.each { |match_i| @guessed_word[match_i] = char }
+    @wrong_number += 1 if matches.length.zero?
+    @users[0].score += 1 if @guessed_word == @round_word
+  end
+
+  def guessed_char
+    char = gets_message('Please guess a character for the above spaces')
+    char = gets_message('Please select a valid character') until char.match?(/^[a-z]$/) || char.match?(/^[A-Z]$/)
+    char
+  end
+
+  def play_round
+    display_score('partial')
+    while @wrong_number < @max_wrong
+      draw_board
+      char = 'x' # guessed_char
+      update_game_state(char)
+      break if @guessed_word == @round_word
+    end
+    draw_board
+    @rounds += 1
+  end
+
+  def play_recursive
+    play_round
+
+    if another_round?
+      end_game
+    else
+      reset_for_new_game
+      play_recursive
+    end
+  end
+
+  def reset_for_new_game
+    @round_word = select_random_word
+    @guessed_word = '_' * @round_word.length
+    @wrong_number = 0
+  end
+
+  def end_game
+    display_score('final')
+    puts "Thanks for playing #{@users[0].name}!"
+  end
+
+  def display_score(string)
+    puts "\n------------ The #{string} score is ------------"
+    puts "    win rate (#{@users[0].score}/#{@rounds}): #{@users[0].score} wins in #{@rounds} rounds\n\n"
+  end
+
+  def prepare_game
+    enter_name
+  end
+
+  def play_game
+    prepare_game
+    play_recursive
+  end
+end
+
+Hangman.new.play_game
