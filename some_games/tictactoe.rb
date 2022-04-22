@@ -75,7 +75,7 @@ class TicTacToe
   end
 
   def enter_name(symbol)
-    name1 = gets_message("Plase enter the name of the first player to play (#{symbol})")
+    name1 = 'a' # gets_message("Plase enter the name of the first player to play (#{symbol})")
     @users.push(TicTacToeUser.new(name1, symbol))
   end
 
@@ -111,7 +111,7 @@ class TicTacToe
   end
 
   def someone_won
-    lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8]]
+    lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
 
     lines.each do |line|
       return @table.symbols[line[0]] if check_tictactoe(line)
@@ -127,13 +127,13 @@ class TicTacToe
       else
         play_movement('o')
       end
-      break if someone_won
+      break if someone_won != false
     end
     update_scores
   end
 
-  def exit_game?(answer)
-    puts 'Do you want to finish the game? (y/n)'
+  def exit_game?
+    answer = gets_message('Do you want to finish the game? (y/n)')
     answer = gets_message('please enter a valid option: (y/n)') while answer != 'y' && answer != 'n'
     answer == 'y'
   end
@@ -148,7 +148,7 @@ class TicTacToe
   def play_recursive
     play_round
 
-    if exit_game?(gets.chomp)
+    if exit_game?
       end_game
     else
       reset_for_new_game
