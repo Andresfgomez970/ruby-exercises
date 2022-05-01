@@ -118,7 +118,16 @@ class HangManDraw
     end
   end
 
+  def remaining_tries
+    if @wrong_number < @max_wrong 
+      "You still have #{@max_wrong - @wrong_number} tries our of #{@max_wrong}"
+    else
+      'You have exhausted the number of tries'
+    end
+  end
+
   def draw_body
+    puts remaining_tries
     puts welcome_mesage
     puts over_platform
     puts head
@@ -202,9 +211,15 @@ class Hangman < HangManDraw
   end
 
   def guessed_char
-    char = gets_message("\nPlease guess a character for the above spaces or type save").downcase
+    char = gets_message("\nPlease guess a character for the above spaces or save by typing 'save'").downcase
     char = gets_message('Please select a valid character').downcase until char.match?(/^[a-z]$/) || char == 'save'
     char
+  end
+
+  def save_game?
+    ans = gets_message('Do you want to save your progress (y/n)?')
+    ans = gets_message('Please select a valid option (y/n)') until ans == 'y' || ans == 'n'
+    ans == 'y'
   end
 
   def save_game
@@ -217,11 +232,10 @@ class Hangman < HangManDraw
 
   def play_round
     display_score('partial')
-    while @wrong_number < @max_wrong
+    while @wrong_number < @max_wrong && @guessed_word != @round_word && !@save
       draw_board
       char = guessed_char
       update_game_state(char)
-      break if @guessed_word == @round_word || @save
     end
     save_game
     draw_board
@@ -232,6 +246,8 @@ class Hangman < HangManDraw
     play_round
 
     if another_round?
+      @save = true if save_game?
+      save_game
       end_game
     else
       reset_for_new_game
@@ -278,17 +294,17 @@ class Hangman < HangManDraw
     play_recursive
   end
 
-  def to_json(*_args)
-    JSON.dump ( {
-      json_class: self.class.name,
-      data: {
-        filename: @filename, round_word: @round_word,
-        guessed_word: @guessed_word, users: { name: @users[0].name, score: @users[0].score },
-        rounds: @rounds, wrong_number: @wrong_number,
-        characters_chosen: @characters_chosen
-      }
-    })
-  end
+  # def to_json(*_args)
+  #   JSON.dump ( {
+  #     json_class: self.class.name,
+  #     data: {
+  #       filename: @filename, round_word: @round_word,
+  #       guessed_word: @guessed_word, users: { name: @users[0].name, score: @users[0].score },
+  #       rounds: @rounds, wrong_number: @wrong_number,
+  #       characters_chosen: @characters_chosen
+  #     }
+  #   })
+  # end
 
   def save_to_json
     Dir.mkdir('output') unless Dir.exist?('output')
@@ -313,7 +329,11 @@ class Hangman < HangManDraw
     standart_init(data_json['data']['filename'])
     fetch_state_game(data_json)
     fetch_user_info(data_json)
+    # substract in order to count correcly, this permits
+    #  to enter again to play_round and have a correct number
+    #  of rounds
+    @rounds -= 1 if @wrong_number == @max_wrong
   end
 end
 
-Hangman.new.play_game
+p JSON.pretty_generate(Hangman.new)
