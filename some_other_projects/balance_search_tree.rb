@@ -43,8 +43,37 @@ class Tree
 
     node
   end
+
+  def level_order
+    queque = []
+    actual_node  = @root
+    queque.push(@root)
+    until queque.length.zero?
+      yield actual_node.value
+      queque.shift
+      queque.push(actual_node.left) unless actual_node.left.nil?
+      queque.push(actual_node.right) unless actual_node.right.nil?
+      actual_node = queque[0]
+    end
+  end
+
+  def level_order_recursive(queque=[@root], &block)
+    if queque.length.zero?
+      return nil
+    else
+      actual_node = queque[0]
+      block.call actual_node.value
+      queque.shift
+      queque.push(actual_node.left) unless actual_node.left.nil?
+      queque.push(actual_node.right) unless actual_node.right.nil?
+      level_order_recursive(queque, &block)
+    end
+  end
+
+  def insert
+  end
 end
 
 
 tree = Tree.new([1, 2, 3, 4, 5, 6, 7])
-p tree
+tree.level_order_recursive {|e| p e}
