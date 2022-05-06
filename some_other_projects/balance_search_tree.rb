@@ -14,6 +14,14 @@ def level_order_recursive(queque, &block)
   end
 end
 
+# Defining general utils generally used in objects
+module ObjectUtils
+  def near_objects_by_attribute(object_list, compare_object, attribute)
+    min_dist = object_list.map { |obj| (compare_object.send(attribute) - obj.send(attribute)).abs }.min
+    object_list.filter { |lf| (compare_object.value - lf.value).abs == min_dist }
+  end
+end
+
 # class with that represents a node in the tree
 class Node
   include Comparable
@@ -61,6 +69,10 @@ end
 
 # Defining class of the balanced tree
 class Tree
+  include ObjectUtils
+
+  attr_accessor :root
+
   def initialize(array)
     array = array.uniq
     @root = build_tree(array)
@@ -131,7 +143,7 @@ class Tree
     insert_node, actual_node, insert_state = fetch_insert_control_var(value)
 
     until insert_state
-      insert_state = update_insert_state
+      insert_state = update_insert_state(actual_node, insert_node)
       if actual_node > insert_node
         actual_node.left.nil? ? actual_node.left = insert_node : actual_node = actual_node.left
       else
@@ -163,110 +175,106 @@ class Tree
     actual_node > target_node ? actual_node.left : actual_node.right
   end
 
+  def get_leafs(node = @root)
+    leafs = []
+    block = proc { |e| leafs.push(e) if e.right.nil? && e.left.nil? }
+    node = get_actual_node(node)
+    level_order(node, &block)
+    leafs.push(node) if (node.one_child? || node.no_child?) && node == @root
+    leafs
+  end
+
+  def delete_branch_node(queque)
+    leafs = get_leafs
+    final_leafs = near_objects_by_attribute(leafs, queque[-1], 'value')
+    final_leaf = final_leafs[0] > final_leafs[1] ? final_leafs[0] : final_leafs[1]
+    delete(final_leaf.value)
+    queque[-1].value = final_leaf.value
+  end
+
+  def delete_given_node(queque)
+    if queque[-1].no_child?
+      delete_leaf_node(queque) # verfigy if change is deep or shallo
+    elsif queque[-1].one_child?
+      delete_stick_node(queque)
+    else
+      delete_branch_node(queque)
+    end
+  end
+
   def delete(value)
     delete_node, queque, delete_state = fetch_delete_control_var(value)
     until delete_state
       if queque[-1] == delete_node
         delete_state = true
-        if queque[-1].no_child?
-          delete_leaf_node(queque)  # verfigy if change is deep or shallo
-        elsif queque[-1].one_child?
-          delete_stick_node(queque)
-        else
-          leafs = []
-          level_order_recursive {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
-          min_dist = leafs.map{ |lf| (delete_node.value - lf.value).abs }.min
-          final_leafs = leafs.filter { |lf| (delete_node.value - lf.value).abs == min_dist}
-          final_leaf = final_leafs[0] > final_leafs[1] ? final_leafs[0] : final_leafs[1]
-          delete(final_leaf.value)
-          queque[-1].value = final_leaf.value
-        end
+        delete_given_node(queque)
       else
-        actual_node = next_node(actual_node, delete_node)
-        queque.push(actual_node)
+        queque.push(next_node(queque[-1], delete_node))
       end
     end
   end
 
   def get_actual_node(node)
     actual_node = @root
-    while actual_node != node
-      if node < actual_node
-        actual_node = actual_node.left
-      else
-        actual_node = actual_node.right
-      end
-    end
-    return actual_node
+    actual_node = node < actual_node ? actual_node.left : actual_node.right while actual_node != node
+    actual_node
   end
 
-  def heights(node = @root, leafs = false)
-    if leafs == false
-      leafs = []
-      level_order_recursive {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
-    end  
-
+  def heights(initial_node = @root)
     hs = []
-    leafs.each do |leaf|
-      h = 0
-      next_node = node
-      while next_node != leaf
-        h += 1
-        if leaf < next_node
-          next_node = next_node.left
-        else
-          next_node = next_node.right
-        end
+    get_leafs(get_actual_node(initial_node)).each do |leaf|
+      hs.push(0)
+      actual_node = get_actual_node(initial_node)
+      while actual_node != leaf
+        hs[-1] += 1
+        actual_node = next_node(actual_node, leaf)
       end
-      hs.push(h)
     end
-
     hs
   end
 
   def height(node = @root)
-    leafs = []
-    block = Proc.new {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
-    node = get_actual_node(node)
-    level_order(node, &block)
-    hs = heights(node, leafs)
-    hs.max
+    heights(node).max
   end
 
-  def depth(node)
+  def depth(target_node)
     d = 0
     actual_node = @root
-    while actual_node != node
+    while actual_node != target_node
       d += 1
-      if node < actual_node
-        actual_node = actual_node.left
-      else
-        actual_node = actual_node.right
-      end
+      actual_node = next_node(actual_node, target_node)
     end
     d
   end
 
   def balanced?
-    hs = heights() 
-    hs_diff = hs.map{|h| (h - hs.max).abs }
-    hs_diff.all?{|h| h < 2}
+    hs = heights
+    hs_diff = hs.map { |h| (h - hs.max).abs }
+    hs_diff.all? { |h| h < 2 }
   end
 
   def rebalance
-    data = level_order()
+    data = level_order
     data = data.sort
-    @root = build_tree(data) 
+    @root = build_tree(data)
   end
 end
 
-
 tree = Tree.new([1, 2, 3, 4, 5, 6, 7])
+tree.insert(0)
+tree.delete(7)
+tree.delete(6)
+tree.delete(4)
 p tree.level_order
-# p tree.height(Node.new(2))
-# p tree.depth(Node.new(2))
-# tree.insert(0)
-# tree.insert(-1)
-# p tree.balanced?
-# tree.rebalance
-# p tree.balanced?
+puts "height at from node #{tree.root.value} : #{tree.height}"
+node = Node.new(2)
+puts "height at from node #{node.value} : #{tree.height(node)}"
+
+node = Node.new(2)
+puts "depth from node #{node.value} : #{tree.depth(node)}"
+node = Node.new(1)
+puts "depth from node #{node.value} : #{tree.depth(node)}"
+
+puts "Is the actual tree balance? #{tree.balanced? ? 'yes' : 'no'}"
+tree.rebalance
+puts "Is the actual tree balance? #{tree.balanced? ? 'yes' : 'no'}"
