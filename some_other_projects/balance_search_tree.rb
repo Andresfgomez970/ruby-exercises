@@ -1,3 +1,20 @@
+# frozen_string_literal: true
+
+# Wrote recursively too
+def level_order_recursive(queque, &block)
+  if queque.length.zero?
+    nil
+  else
+    actual_node = queque[0]
+    block.call actual_node
+    queque.shift
+    queque.push(actual_node.left) unless actual_node.left.nil?
+    queque.push(actual_node.right) unless actual_node.right.nil?
+    level_order_recursive(queque, &block)
+  end
+end
+
+# class with that represents a node in the tree
 class Node
   include Comparable
 
@@ -9,45 +26,51 @@ class Node
     @right = right
   end
 
-  def >(otherNode)
-    self.value > otherNode.value
+  def >(other)
+    value > other.value
   end
 
-  def >=(otherNode)
-    self.value >= otherNode.value
+  def >=(other)
+    value >= other.value
   end
 
-  def <(otherNode)
-    self.value < otherNode.value
+  def <(other)
+    value < other.value
   end
 
-  def <=(otherNode)
-    self.value <= otherNode.value
+  def <=(other)
+    value <= other.value
   end
 
-  def ==(otherNode)
-    self.value == otherNode.value
+  def ==(other)
+    value == other.value
   end
 
-  def !=(otherNode)
-    self.value != otherNode.value
+  def !=(other)
+    value != other.value
   end
 
+  def no_child?
+    @right.nil? && @left.nil?
+  end
 
+  def one_child?
+    @right.nil? ^ @left.nil?
+  end
 end
 
+# Defining class of the balanced tree
 class Tree
   def initialize(array)
     array = array.uniq
     @root = build_tree(array)
-    @h_dummy = 0 
   end
 
   def build_tree(array)
     mid = array.length / 2
     node = Node.new(array[mid])
     return node if array.length == 1
-    return nil if array.length == 0
+    return nil if array.length.zero?
 
     node.left = build_tree(array[0, mid])
     node.right = build_tree(array[mid + 1, array.length])
@@ -55,43 +78,25 @@ class Tree
     node
   end
 
+  def add_to_queque(queque, actual_node)
+    queque.push(actual_node.left) unless actual_node.left.nil?
+    queque.push(actual_node.right) unless actual_node.right.nil?
+    queque
+  end
+
   def level_order(initial_node = @root)
     res = []
-    queque = []
-    actual_node  = initial_node
-    queque.push(initial_node)
+    queque = [initial_node]
     until queque.length.zero?
-      if block_given?
-        yield actual_node
-      else
-        res.push(actual_node.value)
-      end
+      block_given? ? (yield queque[0]) : res.push(queque[0].value)
+      queque = add_to_queque(queque, queque[0])
       queque.shift
-      queque.push(actual_node.left) unless actual_node.left.nil?
-      queque.push(actual_node.right) unless actual_node.right.nil?
-      actual_node = queque[0]
     end
     res unless block_given?
   end
 
-  # Wrote recursively too
-  def level_order_recursive(queque=[@root], &block)
-    if queque.length.zero?
-      return nil
-    else
-      actual_node = queque[0]
-      block.call actual_node
-      queque.shift
-      queque.push(actual_node.left) unless actual_node.left.nil?
-      queque.push(actual_node.right) unless actual_node.right.nil?
-      level_order_recursive(queque, &block)
-    end
-  end
-
   def inorder(node = @root, &block)
-    if node.nil?
-      return
-    end
+    return if node.nil?
 
     inorder(node.left, &block)
     block.call node
@@ -99,9 +104,7 @@ class Tree
   end
 
   def preorder(node = @root, &block)
-    if node.nil?
-      return
-    end
+    return if node.nil?
 
     block.call node
     preorder(node.left, &block)
@@ -109,58 +112,66 @@ class Tree
   end
 
   def postorder(node = @root, &block)
-    if node.nil?
-      return
-    end
+    return if node.nil?
 
     postorder(node.left, &block)
     postorder(node.right, &block)
     block.call node
   end
 
+  def fetch_insert_control_var(value)
+    [Node.new(value), @root, false]
+  end
+
+  def update_insert_state(actual_node, insert_node)
+    actual_node.left.nil? || actual_node.right.nil? || actual_node == insert_node
+  end
+
   def insert(value)
-    insert_node = Node.new(value)
-    actual_node  = @root
-    insert_state = false
+    insert_node, actual_node, insert_state = fetch_insert_control_var(value)
 
     until insert_state
-      if actual_node == insert_node
-        insert_state = true
-      elsif actual_node > insert_node
-        if actual_node.left.nil?
-          actual_node.left = insert_node
-          insert_state = true
-        end
-        actual_node = actual_node.left
+      insert_state = update_insert_state
+      if actual_node > insert_node
+        actual_node.left.nil? ? actual_node.left = insert_node : actual_node = actual_node.left
       else
-        if actual_node.right.nil?
-          actual_node.right = insert_node
-          insert_state = true
-        end
-        actual_node = actual_node.right
+        actual_node.right.nil? ? actual_node.right = insert_node : actual_node = actual_node.right
       end
     end
   end
 
+  def fetch_delete_control_var(value)
+    [Node.new(value), [@root], false]
+  end
+
+  def delete_leaf_node(queque)
+    @root = nil if queque[-1] == @root
+    queque[-2].right = nil if queque[-1] > queque[-2]
+    queque[-2].left = nil if queque[-1] < queque[-2]
+  end
+
+  def delete_stick_node(queque)
+    node_a = queque[-1]
+    node_b = queque[-2]
+
+    assign = node_a.right.nil? ? node_a.left : node_a.right
+    node_b.right = assign if node_b.right == node_a
+    node_b.left = assign if node_b.left == node_a
+  end
+
+  def next_node(actual_node, target_node)
+    actual_node > target_node ? actual_node.left : actual_node.right
+  end
+
   def delete(value)
-    delete_node = Node.new(value)
-    queque = Array.new(1, @root)
-    delete_state = false
+    delete_node, queque, delete_state = fetch_delete_control_var(value)
     until delete_state
       if queque[-1] == delete_node
         delete_state = true
-        if queque[-1].right.nil? && queque[-1].left.nil?
-          @root = nil if queque[-1] == @root
-          queque[-2].right = nil if queque[-1] > queque[-2]
-          queque[-2].left = nil if queque[-1] < queque[-2]
-        elsif queque[-1].right.nil? ^ queque[-1].left.nil?
-          if queque[-1].right.nil?
-            queque[-2].right = queque[-1].left if queque[-2].right == queque[-1]
-            queque[-2].left = queque[-1].left if queque[-2].left == queque[-1]
-          else
-            queque[-2].right = queque[-1].right if queque[-2].right == queque[-1]
-            queque[-2].left = queque[-1].righ if queque[-2].left == queque[-2]
-          end
+        if queque[-1].no_child?
+          delete_leaf_node(queque)  # verfigy if change is deep or shallo
+        elsif queque[-1].one_child?
+          delete_stick_node(queque)
         else
           leafs = []
           level_order_recursive {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
@@ -171,11 +182,7 @@ class Tree
           queque[-1].value = final_leaf.value
         end
       else
-        if queque[-1] > delete_node
-          actual_node = queque[-1].left
-        else
-          actual_node = queque[-1].right
-        end
+        actual_node = next_node(actual_node, delete_node)
         queque.push(actual_node)
       end
     end
@@ -251,15 +258,15 @@ class Tree
     data = data.sort
     @root = build_tree(data) 
   end
-
 end
 
 
 tree = Tree.new([1, 2, 3, 4, 5, 6, 7])
-p tree.height(Node.new(2))
-p tree.depth(Node.new(2))
-tree.insert(0)
-tree.insert(-1)
-p tree.balanced?
-tree.rebalance
-p tree.balanced?
+p tree.level_order
+# p tree.height(Node.new(2))
+# p tree.depth(Node.new(2))
+# tree.insert(0)
+# tree.insert(-1)
+# p tree.balanced?
+# tree.rebalance
+# p tree.balanced?
