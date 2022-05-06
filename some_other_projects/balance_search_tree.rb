@@ -193,12 +193,11 @@ class Tree
     return actual_node
   end
 
-
-  def height(node = @root)
-    leafs = []
-    block = Proc.new {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
-    node = get_actual_node(node)
-    level_order(node, &block)
+  def heights(node = @root, leafs = false)
+    if leafs == false
+      leafs = []
+      level_order_recursive {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
+    end  
 
     hs = []
     leafs.each do |leaf|
@@ -214,7 +213,16 @@ class Tree
       end
       hs.push(h)
     end
-    
+
+    hs
+  end
+
+  def height(node = @root)
+    leafs = []
+    block = Proc.new {|e| leafs.push(e) if e.right.nil? && e.left.nil?}
+    node = get_actual_node(node)
+    level_order(node, &block)
+    hs = heights(node, leafs)
     hs.max
   end
 
@@ -232,11 +240,26 @@ class Tree
     d
   end
 
+  def balanced?
+    hs = heights() 
+    hs_diff = hs.map{|h| (h - hs.max).abs }
+    hs_diff.all?{|h| h < 2}
+  end
+
+  def rebalance
+    data = level_order()
+    data = data.sort
+    @root = build_tree(data) 
+  end
 
 end
 
 
 tree = Tree.new([1, 2, 3, 4, 5, 6, 7])
-tree.insert(0)
 p tree.height(Node.new(2))
 p tree.depth(Node.new(2))
+tree.insert(0)
+tree.insert(-1)
+p tree.balanced?
+tree.rebalance
+p tree.balanced?
