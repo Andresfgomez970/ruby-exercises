@@ -107,28 +107,31 @@ class Tree
     res unless block_given?
   end
 
-  def inorder(node = @root, &block)
+  def inorder(node = @root, res = [], &block)
     return if node.nil?
 
-    inorder(node.left, &block)
-    block.call node
-    inorder(node.right, &block)
+    inorder(node.left, res, &block)
+    block_given? ? block.call(node) : res.push(node.value)
+    inorder(node.right, res, &block)
+    res unless block_given?
   end
 
-  def preorder(node = @root, &block)
+  def preorder(node = @root, res = [], &block)
     return if node.nil?
 
-    block.call node
-    preorder(node.left, &block)
-    preorder(node.right, &block)
+    block_given? ? block.call(node) : res.push(node.value)
+    preorder(node.left, res, &block)
+    preorder(node.right, res, &block)
+    res unless block_given?
   end
 
-  def postorder(node = @root, &block)
+  def postorder(node = @root, res = [], &block)
     return if node.nil?
 
-    postorder(node.left, &block)
-    postorder(node.right, &block)
-    block.call node
+    postorder(node.left, res, &block)
+    postorder(node.right, res, &block)
+    block_given? ? block.call(node) : res.push(node.value)
+    res unless block_given?
   end
 
   def fetch_insert_control_var(value)
@@ -258,23 +261,58 @@ class Tree
     data = data.sort
     @root = build_tree(data)
   end
+
+  def pretty_print(node = @root, prefix = '', is_left = true)
+    pretty_print(node.right, "#{prefix}#{is_left ? '│   ' : '    '}", false) if node.right
+    puts "#{prefix}#{is_left ? '└── ' : '┌── '}#{node.value}"
+    pretty_print(node.left, "#{prefix}#{is_left ? '    ' : '│   '}", true) if node.left
+  end
 end
 
 tree = Tree.new([1, 2, 3, 4, 5, 6, 7])
-tree.insert(0)
-tree.delete(7)
-tree.delete(6)
-tree.delete(4)
+puts 'initial tree'
+tree.pretty_print
+
+puts 'Level order'
 p tree.level_order
-puts "height at from node #{tree.root.value} : #{tree.height}"
+
+puts 'Inorder'
+p tree.inorder
+
+puts 'Preorder'
+p tree.preorder
+
+puts 'Postorder'
+p tree.postorder
+
+puts 'insert 0'
+tree.insert(0)
+tree.pretty_print
+
+puts 'delete 7'
+tree.delete(7)
+tree.pretty_print
+
+puts 'delete 6'
+tree.delete(6)
+tree.pretty_print
+
+puts 'delete 4'
+tree.delete(4)
+tree.pretty_print
+
+puts "\nheight at from node #{tree.root.value} : #{tree.height}"
 node = Node.new(2)
 puts "height at from node #{node.value} : #{tree.height(node)}"
 
 node = Node.new(2)
-puts "depth from node #{node.value} : #{tree.depth(node)}"
+puts "\ndepth from node #{node.value} : #{tree.depth(node)}"
 node = Node.new(1)
 puts "depth from node #{node.value} : #{tree.depth(node)}"
 
-puts "Is the actual tree balance? #{tree.balanced? ? 'yes' : 'no'}"
+puts "\nIs the actual tree balance? #{tree.balanced? ? 'yes' : 'no'}"
+
+puts "\nApplying tree rebalance:"
 tree.rebalance
+tree.pretty_print
 puts "Is the actual tree balance? #{tree.balanced? ? 'yes' : 'no'}"
