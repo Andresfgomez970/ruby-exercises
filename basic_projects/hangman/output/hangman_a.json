@@ -1,0 +1,1 @@
+{"json_class":"Hangman","data":{"filename":"google-10000-english-no-swears.txt","round_word":"prairie","guessed_word":"prairie","users":{"name":"a","score":1},"rounds":4,"wrong_number":5,"characters_chosen":["o","x","x","_","o","_","x","_","o","_","_","_","_","_","x","o","_","o","_","_","x","_","_","_","_","_"]}}
