@@ -13,4 +13,6 @@ def caesar_cipher(string, shift)
 	new_string.join
 end
 
-p caesar_cipher("What a string!", 5)
+if __FILE__ == $0
+	p caesar_cipher("What a string!", 5)
+end
