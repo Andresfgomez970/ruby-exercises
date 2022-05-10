@@ -294,17 +294,17 @@ class Hangman < HangManDraw
     play_recursive
   end
 
-  # def to_json(*_args)
-  #   JSON.dump ( {
-  #     json_class: self.class.name,
-  #     data: {
-  #       filename: @filename, round_word: @round_word,
-  #       guessed_word: @guessed_word, users: { name: @users[0].name, score: @users[0].score },
-  #       rounds: @rounds, wrong_number: @wrong_number,
-  #       characters_chosen: @characters_chosen
-  #     }
-  #   })
-  # end
+  def to_json(*_args)
+    JSON.dump ( {
+      json_class: self.class.name,
+      data: {
+        filename: @filename, round_word: @round_word,
+        guessed_word: @guessed_word, users: { name: @users[0].name, score: @users[0].score },
+        rounds: @rounds, wrong_number: @wrong_number,
+        characters_chosen: @characters_chosen
+      }
+    })
+  end
 
   def save_to_json
     Dir.mkdir('output') unless Dir.exist?('output')
@@ -318,6 +318,7 @@ class Hangman < HangManDraw
     @round_word = data_json['data']['round_word']
     @guessed_word = data_json['data']['guessed_word']
     @rounds = data_json['data']['rounds']
+		@characters_chosen = data_json['data']['characters_chosen']
   end
 
   def fetch_user_info(data_json)
@@ -336,4 +337,6 @@ class Hangman < HangManDraw
   end
 end
 
-p JSON.pretty_generate(Hangman.new)
+
+Hangman.new.play_game
+# p JSON.pretty_generate(Hangman.new)
