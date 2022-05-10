@@ -75,7 +75,7 @@ class TicTacToe
   end
 
   def enter_name(symbol)
-    name1 = 'a' # gets_message("Plase enter the name of the first player to play (#{symbol})")
+    name1 = gets_message("Plase enter the name of the first player to play (#{symbol})")
     @users.push(TicTacToeUser.new(name1, symbol))
   end
 
@@ -121,7 +121,7 @@ class TicTacToe
 
   def play_round
     display_score('partial')
-    (0..9).each do |counter|
+    (0..8).each do |counter|
       if counter.even?
         play_movement('x')
       else
