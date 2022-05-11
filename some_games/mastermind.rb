@@ -83,7 +83,6 @@ module BasicUtils
 
   def exit_game?
     answer = gets_message('Do you want to finish the game? (y/n)')
-    p answer
     answer = gets_message('please enter a valid option: (y/n)') while answer != 'y' && answer != 'n'
     answer == 'y'
   end
@@ -119,7 +118,7 @@ class MaterMind
     unless @guesser_state
       @table.draw_table
       puts 'Please enter a code so that the machine can guess it'
-      parse_code(gets.chomp).join
+      @secret_code = parse_code(gets.chomp).join
     end
     puts "\n \tLet the game begin #{@users[0].name}!!"
   end
