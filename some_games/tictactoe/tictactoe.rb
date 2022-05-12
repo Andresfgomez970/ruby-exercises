@@ -6,9 +6,9 @@ class User
   # This is a basic user class
   attr_accessor :name, :score
 
-  def initialize(name)
+  def initialize(name, score=0)
     @name = name
-    @score = 0
+    @score = score
   end
 end
 
@@ -18,9 +18,13 @@ class TicTacToeUser < User
   # This is an user class for a tictatoe game
   attr_accessor :mark
 
-  def initialize(name, mark)
-    super(name)
+  def initialize(name, mark, score=0)
+    super(name, score)
     @mark = mark
+  end
+
+  def ==(other)
+    @name == other.name && @score == other.score && @mark == other.mark 
   end
 end
 
@@ -31,7 +35,11 @@ class Table
   #   tictactoe game
 
   def initialize
-    @symbols = (1..9).to_a
+    @symbols = init_symbols
+  end
+
+  def init_symbols
+    (1..9).to_a
   end
 
   def draw_row(col1, col2, col3)
@@ -66,6 +74,10 @@ class Table
     @symbols
   end
 
+  def coincide_symbols(indexes)
+    @symbols[indexes[0]] == @symbols[indexes[1]] &&
+      @symbols[indexes[0]] == @symbols[indexes[2]]
+  end
 end
 
 # Basic utils module
@@ -74,16 +86,19 @@ module BasicUtils
     puts message
     gets.chomp
   end
-end
 
+  def valid_yn_answer?(answer)
+    answer == 'y' || answer == 'n'
+  end
+end
 
 # Class that has all the functionalities of the game
 class TicTacToe
   include BasicUtils
 
-  def initialize
-    @users = []
-    @table = Table.new
+  def initialize(users = [], table = Table.new)
+    @users = users
+    @table = table
   end
 
   def enter_name(symbol)
@@ -100,18 +115,20 @@ class TicTacToe
     puts "\nLet the game begin #{@users[0].name} and #{@users[1].name}!!"
   end
 
-  def play_movement(draw_symbol)
+  def draw_movement(draw_symbol)
     @table.draw_table
-    @table.update_symbols(chosen_number - 1, draw_symbol)
+    @table.update_symbols(chosen_position, draw_symbol)
     @table.draw_table
   end
 
-  def chosen_number
+  def valid_position?(number)
+    number.match?(/^[0-9]$/) && @table.get_symbols.include?(number.to_i)
+  end
+
+  def chosen_position
     number = gets_message('Please enter a number')
-    until number.match?(/^[0-9]$/) && @table.get_symbols.include?(number.to_i)
-      number = gets_message('Please select a valid number')
-    end
-    number.to_i
+    number = gets_message('Please select a valid number') until valid_position?(number)
+    number.to_i - 1
   end
 
   def update_scores
@@ -122,8 +139,7 @@ class TicTacToe
   end
 
   def check_tictactoe(indexes)
-    @table.get_symbol(indexes[0]) == @table.get_symbol(indexes[1]) &&
-      @table.get_symbol(indexes[0]) == @table.get_symbol(indexes[2])
+    @table.coincide_symbols(indexes)
   end
 
   def someone_won
@@ -135,30 +151,41 @@ class TicTacToe
     false
   end
 
+  def play_movement(counter)
+    if counter.even?
+      draw_movement('x')
+    else
+      draw_movement('o')
+    end
+  end
+
   def play_round
     display_score('partial')
     (0..8).each do |counter|
-      if counter.even?
-        play_movement('x')
-      else
-        play_movement('o')
-      end
-      break if someone_won != false
+      play_movement(counter)
+      break if someone_won
     end
     update_scores
   end
 
   def exit_game?
     answer = gets_message('Do you want to finish the game? (y/n)')
-    answer = gets_message('please enter a valid option: (y/n)') while answer != 'y' && answer != 'n'
+    answer = gets_message('please enter a valid option: (y/n)') until valid_yn_answer?(answer)
     answer == 'y'
   end
 
-  def reset_for_new_game
-    @table = Table.new
+  def interchange_marks
     @users.each_with_index { |user, i| @users[i].mark = (user.mark == 'x' ? 'o' : 'x') }
-    begin_user_name = @users.filter_map { |user| user.name if user.mark == 'x' }
-    puts "\nNow user #{begin_user_name[0]} begins"
+  end
+
+  def begin_user
+    @users.filter_map { |user| user.name if user.mark == 'x' }[0]
+  end
+
+  def reset_for_new_game
+    @table.init_symbols
+    interchange_marks
+    puts "\nNow user #{begin_user} begins"
   end
 
   def play_recursive
@@ -184,7 +211,7 @@ class TicTacToe
 
   def win_message
     winner = winner_user
-    if winner.nil? && @users[0].score != 0
+    if winner.nil?
       "Wow! That's a tie"
     else
       "The winner is #{winner_user}; congrats!!!"
@@ -205,6 +232,10 @@ class TicTacToe
   def end_game
     display_score('final')
     puts win_message
+    puts final_message
+  end
+
+  def final_message
     puts "Thanks for playing #{@users[0].name} and #{@users[1].name}"
   end
 end
