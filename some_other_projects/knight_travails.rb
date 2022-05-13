@@ -125,4 +125,17 @@ def knight_moves(init_pos, final_pos)
   knigh_tree.find_shortest_path(final_pos)
 end
 
+puts 'init: [0, 0], final: [1, 2]'
+p knight_moves([0, 0], [1, 2])
+
+puts "\n"
+puts 'init: [0, 0], final: [3, 3]'
+p knight_moves([0, 0], [3, 3])
+
+puts "\n"
+puts 'init: [3, 3], final: [0, 0]'
+p knight_moves([3, 3], [0, 0])
+
+puts "\n"
+puts 'init: [3, 3], final: [4, 3]'
 p knight_moves([3, 3], [4, 3])
