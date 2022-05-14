@@ -1,0 +1,1 @@
+In this part of the repo I implement a chess and the posssibility of a computer that playes the game too with different levels of difficulty.
