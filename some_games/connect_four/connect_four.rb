@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'colorize'
 
 # Basic utils module
 module BasicUtils
@@ -163,15 +164,13 @@ end
 class ConnectFourGame
   include BasicUtils
 
-  def initialize(player1 = ConnectFourUser.new({ mark: 'x' }), player2 = ConnectFourUser.new({ mark: 'o' }),
+  def initialize(player1 = ConnectFourUser.new({ mark: 'x'.red }), player2 = ConnectFourUser.new({ mark: 'o'.blue }),
                  table = ConnectFourTable.new)
     @player1 = player1
     @player2 = player2
     @table = table
     @someone_won_state = false
   end
-
-  def obtain_winner; end
 
   def someone_won?
     @table.four_connected?
@@ -204,6 +203,11 @@ class ConnectFourGame
 
   def update_scores(current_player)
     change_players(current_player).score += 1 if @someone_won_state
+  end
+
+  def end_round
+    puts win_message
+    display_score('partial')
   end
 
   def end_game
@@ -242,11 +246,12 @@ class ConnectFourGame
   end
 
   def reset_for_new_game
-    @table.reset_for_new_game
+    @table.default_initialize
   end
 
   def play_recursive
     play_round
+    end_round
 
     if exit_game?
       end_game
