@@ -1,6 +1,5 @@
 require_relative '../connect_four'
 
-
 describe ConnectFourTable do
   subject(:table) { described_class.new }
 
