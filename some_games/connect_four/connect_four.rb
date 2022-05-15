@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'colorize'
 
 # Basic utils module
 module BasicUtils
@@ -163,7 +164,7 @@ end
 class ConnectFourGame
   include BasicUtils
 
-  def initialize(player1 = ConnectFourUser.new({ mark: 'x' }), player2 = ConnectFourUser.new({ mark: 'o' }),
+  def initialize(player1 = ConnectFourUser.new({ mark: 'x'.red }), player2 = ConnectFourUser.new({ mark: 'o'.blue }),
                  table = ConnectFourTable.new)
     @player1 = player1
     @player2 = player2
