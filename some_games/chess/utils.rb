@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Basic utils module
 module BasicUtils
   def gets_message(message)
