@@ -41,8 +41,8 @@ class ConnectFourTable
     Array.new(6) { Array.new(7, ' ') }
   end
 
-  def one_level_row(color_row = Array.new(7, ' '))
-    color_row.each.reduce('|') { |sum, color| "#{sum}   #{color}  \t|" }
+  def one_level_row(symbols_of_row = Array.new(7, ' '))
+    symbols_of_row.each.reduce('|') { |sum, symbol| "#{sum}   #{symbol}  \t|" }
   end
 
   # Fcuntionality to draw all a row  of three levels
