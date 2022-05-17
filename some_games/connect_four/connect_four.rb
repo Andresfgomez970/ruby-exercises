@@ -125,11 +125,11 @@ class ConnectFourTable
     @chip_spaces[@chip_spaces.length - 1][Integer(column)] == ' '
   end
 
-  def select_column_to_throw(player_name)
-    msg = "#{player_name} turn"
+  def select_column_to_throw(player)
+    msg = "#{player.name} turn - #{player.mark}"
     n_columns = (@chip_spaces[0].length - 1).to_s
     column = choose_option(msg, ('0'..n_columns).to_a)
-    valid_column?(column) ? column : select_column_to_throw(player_name)
+    valid_column?(column) ? column : select_column_to_throw(player)
   end
 
   def throw_to_column(column, mark)
@@ -162,6 +162,8 @@ end
 
 # class to keep the connect four game
 class ConnectFourGame
+  attr_accessor :table
+
   include BasicUtils
 
   def initialize(player1 = ConnectFourUser.new({ mark: 'x'.red }), player2 = ConnectFourUser.new({ mark: 'o'.blue }),
@@ -177,7 +179,7 @@ class ConnectFourGame
   end
 
   def play_turn(current_player)
-    column = @table.select_column_to_throw(current_player.name)
+    column = @table.select_column_to_throw(current_player)
     @table.throw_to_column(column, current_player.mark)
     @table.draw_table
   end
@@ -289,12 +291,7 @@ class ConnectFourGame
   end
 end
 
-# p ConnectFourTable.new.four_connected? if __FILE__ == $PROGRAM_NAME
-# ConnectFourGame.new.create_players if __FILE__ == $PROGRAM_NAME
+# solver class for the game
 ConnectFourGame.new.play_game if __FILE__ == $PROGRAM_NAME
 
-
-# colores
 # vs PC
-# indicate mark
-# indicate win first
