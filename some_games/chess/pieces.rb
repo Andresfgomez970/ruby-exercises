@@ -23,3 +23,64 @@ class Piece
   end
 end
 
+# module for valid moves of pawns
+module PawnValidMoves
+  def one_step?(init_pos, final_pos, sign)
+    init_pos[1] == final_pos[1] && (final_pos[0] - init_pos[0]) == 1 * sign && free_pos?(final_pos)
+  end
+
+  def two_setps?(init_pos, final_pos, sign)
+    (final_pos[0] - init_pos[0]) == 2 * sign && free_pos?(final_pos)
+  end
+
+  def correct_initial_pos?(init_pos, final_pos, sign)
+    (init_pos[0] == 1 && sign == 1) || (init_pos[0] == 6 && sign == -1)
+  end
+
+  def valid_pawn_forward_move?(init_pos, final_pos, sign)
+    one_step = one_step?(init_pos, final_pos, sign)
+    two_setps = two_setps?(init_pos, final_pos, sign)
+    correct_initial_pos = correct_initial_pos?(init_pos, final_pos, sign)
+    one_step || (two_setps && correct_initial_pos)
+  end
+
+  def diagonal?(init_pos, final_pos, sign)
+    (final_pos[0] - init_pos[0]) == 1 * sign && (final_pos[1] - init_pos[1]).abs == 1
+  end
+
+  def valid_pawn_diagonal_move?(init_pos, final_pos, sign)
+    diagonal = diagonal?(init_pos, final_pos, sign)
+    pieces_to_check = sign == 1 ? @black_pieces : @white_pieces
+    eat_black = pieces_to_check.include?(@pieces_spaces[final_pos[0]][final_pos[1]])
+    diagonal && eat_black
+  end
+
+  def passant_move?(final_pos)
+    return false if @last_piece_moved.nil?
+
+    pos_last_piece = @last_piece_moved[:final_pos]
+    # condition for passant to work
+    if @last_piece_moved[:forward_distance] == 2 && @pieces_spaces[pos_last_piece[0]][pos_last_piece[1]] == BLACK_PAWN
+      passant = @pieces_spaces[final_pos[0] - 1][final_pos[1]] == BLACK_PAWN
+    elsif @last_piece_moved[:forward_distance] == 2 && @pieces_spaces[pos_last_piece[0]][pos_last_piece[1]] == WHITE_PAWN
+      passant = @pieces_spaces[final_pos[0] + 1][final_pos[1]] == WHITE_PAWN
+    else
+      passant = false
+    end
+    @pieces_spaces[pos_last_piece[0]][pos_last_piece[1]] = ' ' if passant
+    passant
+  end
+
+  def valid_en_passant_move?(init_pos, final_pos, sign)
+    diagonal = diagonal?(init_pos, final_pos, sign)
+    passant = passant_move?(final_pos)
+    diagonal && passant
+  end
+
+  def pawn_movement_valid?(init_pos, final_pos, sign)
+    move1_state = valid_pawn_forward_move?(init_pos, final_pos, sign)
+    move2_state = valid_pawn_diagonal_move?(init_pos, final_pos, sign)
+    move3_state = valid_en_passant_move?(init_pos, final_pos, sign)
+    move1_state || move2_state || move3_state
+  end
+end
