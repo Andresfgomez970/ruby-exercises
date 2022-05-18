@@ -2,7 +2,6 @@
 require_relative 'utils'
 require_relative 'pieces'
 
-
 # Class that implements a basic table
 class Table
   include BasicUtils
@@ -51,22 +50,31 @@ class Table
     # draw last support below
     puts line
   end
+
+  def draw_moved_piece(init_pos, final_pos)
+    @pieces_spaces[final_pos[0]][final_pos[1]] = @pieces_spaces[init_pos[0]][init_pos[1]]
+    @pieces_spaces[init_pos[0]][init_pos[1]] = ' '
+  end
+
+  def free_pos?(final_pos)
+    @pieces_spaces[final_pos[0]][final_pos[1]] == ' '
+  end
 end
 
 # Class for the chess table and the changes that are done to it.
 class ChessTable < Table
+  include PawnValidMoves
+
   def initialize
     super({ n_rows: 8, n_columns: 8 })
     initialize_pieces_spaces
+    initialize_pieces_arrays
+    init_last_piece
   end
 
-  def draw_board
-    row_names = ('1'..'8').to_a.reverse
-    super(row_names)
-    # add column names
-    puts one_level_row(('a'..'h').to_a, ' ')
-    # add space for aesthetic purposes
-    puts "\n"
+  def initialize_pieces_arrays
+    @white_pieces = [WHITE_PAWN, WHITE_BISHOP, WHITE_ROOK, WHITE_KNIGHT, WHITE_QUEEN, WHITE_KING]
+    @black_pieces = [BLACK_PAWN, BLACK_BISHOP, BLACK_ROOK, BLACK_KNIGHT, BLACK_QUEEN, BLACK_KING]
   end
 
   def initialize_pieces_spaces
@@ -76,21 +84,85 @@ class ChessTable < Table
     @pieces_spaces[7] = [BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK]
   end
 
+  def draw_board
+    row_names = ('1'..'8').to_a
+    super(row_names)
+    # add column names
+    puts one_level_row(('a'..'h').to_a, ' ')
+    # add space for aesthetic purposes
+    puts "\n"
+  end
+
+  def init_last_piece
+    @last_piece_moved = nil
+  end
+
+  def get_pos(movement, from = 0)
+    initial_col = movement[0 + from].ord - 'a'.ord
+    initial_row = movement[1 + from].to_i - 1
+    [initial_row, initial_col]
+  end
+
   def move_piece(movement)
     # movement is a string with the algebraic notation of chess
     # for example: 'e2e4'
     # first two characters are the initial position
     # last two characters are the final position
-    initial_row = movement[1].to_i - 1
-    initial_column = movement[0].ord - 'a'.ord
-    final_row = movement[3].to_i - 1
-    final_column = movement[2].ord - 'a'.ord
-    @pieces_spaces[final_row][final_column] = @pieces_spaces[initial_row][initial_column]
-    @pieces_spaces[initial_row][initial_column] = ' '
+    init_pos  = get_pos(movement)
+    final_pos = get_pos(movement, 2)
+    draw_moved_piece(init_pos, final_pos) if movement_valid?(init_pos, final_pos)
+    @last_piece_moved = { 'final_pos': final_pos, 'forward_distance': (init_pos[0] - final_pos[0]).abs }
+  end
+
+  def black_pawn_movement_valid?(init_pos, final_pos)
+  end
+
+  def bishop_movement_valid?(init_pos, final_pos)
+  end
+
+  def rook_movement_valid?(init_pos, final_pos)
+  end
+
+  def knight_movement_valid?(init_pos, final_pos)
+  end
+
+  def queen_movement_valid?(init_pos, final_pos)
+  end
+
+  def king_movement_valid?(init_pos, final_pos)
+  end
+
+  def check_white_pieces(piece, init_pos, final_pos)
+    case piece
+    when WHITE_PAWN then pawn_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_BISHOP then bishop_movement_valid?(init_pos, final_pos)
+    when WHITE_ROOK then rook_movement_valid?(init_pos, final_pos)
+    when WHITE_KNIGHT then knight_movement_valid?(init_pos, final_pos)
+    when WHITE_QUEEN then queen_movement_valid?(init_pos, final_pos)
+    when WHITE_KING then king_movement_valid?(init_pos, final_pos)
+    end
+  end
+
+  def check_black_pieces(piece, init_pos, final_pos)
+    case piece
+    when BLACK_PAWN then pawn_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos)
+    when BLACK_ROOK then rook_movement_valid?(init_pos, final_pos)
+    when BLACK_KNIGHT then knight_movement_valid?(init_pos, final_pos)
+    when BLACK_QUEEN then queen_movement_valid?(init_pos, final_pos)
+    when BLACK_KING then king_movement_valid?(init_pos, final_pos)
+    end
+  end
+
+  def movement_valid?(init_pos, final_pos)
+    piece = @pieces_spaces[init_pos[0]][init_pos[1]]
+    check_white_pieces(piece, init_pos, final_pos) || check_black_pieces(piece, init_pos, final_pos)
   end
 end
 
-table = ChessTable.new
-table.draw_board
-table.move_piece('e2e4')
-table.draw_board
+if __FILE__ == $PROGRAM_NAME
+  table = ChessTable.new
+  table.draw_board
+  table.move_piece('e2e4')
+  table.draw_board
+end
