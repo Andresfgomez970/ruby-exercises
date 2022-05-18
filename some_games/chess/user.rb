@@ -12,7 +12,7 @@ end
 
 # user for the connect four game
 class ChessGameUser < GameUser
-  attr_reader :mark
+  attr_reader :mark, :chess_color
 
   def initialize(init_values = {})
     super(init_values)

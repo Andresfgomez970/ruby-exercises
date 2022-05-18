@@ -33,14 +33,14 @@ module PawnValidMoves
     (final_pos[0] - init_pos[0]) == 2 * sign && free_pos?(final_pos)
   end
 
-  def correct_initial_pos?(init_pos, final_pos, sign)
+  def correct_initial_pos?(init_pos, sign)
     (init_pos[0] == 1 && sign == 1) || (init_pos[0] == 6 && sign == -1)
   end
 
   def valid_pawn_forward_move?(init_pos, final_pos, sign)
     one_step = one_step?(init_pos, final_pos, sign)
     two_setps = two_setps?(init_pos, final_pos, sign)
-    correct_initial_pos = correct_initial_pos?(init_pos, final_pos, sign)
+    correct_initial_pos = correct_initial_pos?(init_pos, sign)
     one_step || (two_setps && correct_initial_pos)
   end
 
@@ -83,4 +83,23 @@ module PawnValidMoves
     move3_state = valid_en_passant_move?(init_pos, final_pos, sign)
     move1_state || move2_state || move3_state
   end
+end
+
+
+module BishopValidMoves
+  def bishop_movement_valid?(init_pos, final_pos)
+  end
+
+  def rook_movement_valid?(init_pos, final_pos)
+  end
+
+  def queen_movement_valid?(init_pos, final_pos)
+  end
+
+  def king_movement_valid?(init_pos, final_pos)
+  end
+
+  def knight_movement_valid?(init_pos, final_pos)
+  end
+
 end

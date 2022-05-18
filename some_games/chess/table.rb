@@ -59,17 +59,29 @@ class Table
   def free_pos?(final_pos)
     @pieces_spaces[final_pos[0]][final_pos[1]] == ' '
   end
+
+  def piece_in_pos(pos)
+    @pieces_spaces[pos[0]][pos[1]]    
+  end
+end
+
+class Array
+  def sum_array(array)
+    self.each_with_index { |elem, i| elem + array[i] } if self.length == array.length
+  end
 end
 
 # Class for the chess table and the changes that are done to it.
 class ChessTable < Table
   include PawnValidMoves
+  include BishopValidMoves
 
   def initialize
     super({ n_rows: 8, n_columns: 8 })
     initialize_pieces_spaces
     initialize_pieces_arrays
     init_last_piece
+    init_king_positions
   end
 
   def initialize_pieces_arrays
@@ -82,6 +94,11 @@ class ChessTable < Table
     @pieces_spaces[1] = [WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN]
     @pieces_spaces[6] = [BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN]
     @pieces_spaces[7] = [BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK]
+  end
+
+  def init_king_positions
+    @white_king_position = [0, 4]
+    @black_king_position = [7, 4]
   end
 
   def draw_board
@@ -110,26 +127,8 @@ class ChessTable < Table
     # last two characters are the final position
     init_pos  = get_pos(movement)
     final_pos = get_pos(movement, 2)
-    draw_moved_piece(init_pos, final_pos) if movement_valid?(init_pos, final_pos)
+    draw_moved_piece(init_pos, final_pos)
     @last_piece_moved = { 'final_pos': final_pos, 'forward_distance': (init_pos[0] - final_pos[0]).abs }
-  end
-
-  def black_pawn_movement_valid?(init_pos, final_pos)
-  end
-
-  def bishop_movement_valid?(init_pos, final_pos)
-  end
-
-  def rook_movement_valid?(init_pos, final_pos)
-  end
-
-  def knight_movement_valid?(init_pos, final_pos)
-  end
-
-  def queen_movement_valid?(init_pos, final_pos)
-  end
-
-  def king_movement_valid?(init_pos, final_pos)
   end
 
   def check_white_pieces(piece, init_pos, final_pos)
@@ -154,15 +153,62 @@ class ChessTable < Table
     end
   end
 
-  def movement_valid?(init_pos, final_pos)
-    piece = @pieces_spaces[init_pos[0]][init_pos[1]]
+  def some_piece_move?(piece, init_pos, final_pos)
     check_white_pieces(piece, init_pos, final_pos) || check_black_pieces(piece, init_pos, final_pos)
   end
+
+  def correct_color_piece?(piece, player)
+    player.color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
+  end
+
+  def movement_variables(movement)
+    init_pos  = get_pos(movement)
+    final_pos = get_pos(movement, 2)
+    piece = @pieces_spaces[init_pos[0]][init_pos[1]]
+    [init_pos, final_pos, piece]
+  end
+
+  def check_of_pawns?(king_pos, sign)
+    return false if king_pos[0] == 7 && sign == 1
+    return false if king_pos[0].zero? && sign == -1
+
+    contrary = { 1 => BLACK_PAWN, -1 => WHITE_PAWN }
+    pos1_check = king_pos.sum_array([1 * sign, 1])
+    pos2_check = king_pos.sum_array([1 * sign, -1])
+    piece_in_pos(pos1_check) == contrary[sign] && piece || piece_in_pos(pos2_check) == contrary[sign]
+  end
+
+  def check?(player)
+    king_pos, sign = player.chess_color == 'white' ? [@white_king_position, 1] : [@black_king_position, -1]    
+    check_of_pawns?(king_pos, sign)
+    # check_for_pawn(king_pos, sign)
+    # check_for_bishops(king_pos)
+    # check_for_rooks(king_pos)
+    # check_for_knights(king_pos)
+    # check_for_queens(king_pos)
+    # check_for_kings(king_pos)
+    # false
+  end
+
+  def check_afet_move?(init_pos, final_pos, player)
+    false
+  end
+
+  def movement_valid?(movement, player)
+    init_pos, final_pos, piece = movement_variables(movement)
+    color = correct_color_piece?(piece, player)
+    check_afer_move = check_afer_move?(init_pos, final_pos, player)
+    move = some_piece_move?(piece, init_pos, final_pos)
+    color && move && !check_afer_move
+  end
 end
+
+require_relative 'user'
 
 if __FILE__ == $PROGRAM_NAME
   table = ChessTable.new
   table.draw_board
-  table.move_piece('e2e4')
+  table.move_piece('f2f7')
+  p table.check?(ChessGameUser.new({ chess_color: 'black' }))
   table.draw_board
 end

@@ -4,6 +4,7 @@ require_relative 'user'
 require_relative 'table'
 require_relative 'utils'
 
+# utilities for two games with two players
 module TwoPLayersUtils
   def obtain_play_mode
     message = <<~HEREDOC
@@ -33,14 +34,25 @@ class ChessGame
   include BasicUtils
   include TwoPLayersUtils
 
-  def initialize(player1 = ChessGameUser.new(), player2 = ChessGameUser.new(), table = ChessTable.new)
+  def initialize(player1 = ChessGameUser.new({ chess_color: 'white' }),
+                 player2 = ChessGameUser.new({ chess_color: 'black' }),
+                 table = ChessTable.new)
     @player1 = player1
     @player2 = player2
     @table = table
   end
 
+  def correct_notation_movement?(movement_str)
+    movement_str.mathh(/^[a-h][1-9][a-h][1-9]$/)
+  end
+
+  def get_valid_move(player, msg = 'select a move')
+    input = gets_message(msg)
+    correct_notation_movement?(input) && @table.movement_valid?(input, player) ? input : get_valid_move(msg)
+  end
+
   def play_turn(current_player)
-    input = gets_message('select a move') # @table.select_move(current_player)
+    input = get_valid_move(current_player)
     @table.move_piece(input)
     @table.draw_board
   end
