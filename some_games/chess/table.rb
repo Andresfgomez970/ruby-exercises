@@ -61,13 +61,11 @@ class Table
   end
 
   def piece_in_pos(pos)
-    @pieces_spaces[pos[0]][pos[1]]    
+    @pieces_spaces[pos[0]][pos[1]]
   end
-end
 
-class Array
-  def sum_array(array)
-    self.each_with_index { |elem, i| elem + array[i] } if self.length == array.length
+  def valid_pos?(pos)
+    pos[0].between?(0, @n_rows - 1) && pos[1].between?(0, @n_columns - 1)
   end
 end
 
@@ -75,6 +73,7 @@ end
 class ChessTable < Table
   include PawnValidMoves
   include BishopValidMoves
+  include ChessCheckFunctionalities
 
   def initialize
     super({ n_rows: 8, n_columns: 8 })
@@ -158,7 +157,7 @@ class ChessTable < Table
   end
 
   def correct_color_piece?(piece, player)
-    player.color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
+    player.chess_color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
   end
 
   def movement_variables(movement)
@@ -168,47 +167,52 @@ class ChessTable < Table
     [init_pos, final_pos, piece]
   end
 
-  def check_of_pawns?(king_pos, sign)
-    return false if king_pos[0] == 7 && sign == 1
-    return false if king_pos[0].zero? && sign == -1
-
-    contrary = { 1 => BLACK_PAWN, -1 => WHITE_PAWN }
-    pos1_check = king_pos.sum_array([1 * sign, 1])
-    pos2_check = king_pos.sum_array([1 * sign, -1])
-    piece_in_pos(pos1_check) == contrary[sign] && piece || piece_in_pos(pos2_check) == contrary[sign]
-  end
-
-  def check?(player)
-    king_pos, sign = player.chess_color == 'white' ? [@white_king_position, 1] : [@black_king_position, -1]    
-    check_of_pawns?(king_pos, sign)
-    # check_for_pawn(king_pos, sign)
-    # check_for_bishops(king_pos)
-    # check_for_rooks(king_pos)
-    # check_for_knights(king_pos)
-    # check_for_queens(king_pos)
-    # check_for_kings(king_pos)
-    # false
-  end
-
-  def check_afet_move?(init_pos, final_pos, player)
-    false
+  def check_after_move?(init_pos, final_pos, player)
+    # save piece to replace in case position is not valid
+    saved_piece_init = piece_in_pos(init_pos)
+    saved_piece_final = piece_in_pos(final_pos)
+    draw_moved_piece(init_pos, final_pos)
+    check_after_move = check?(player)
+    @pieces_spaces[init_pos[0]][init_pos[1]] = saved_piece_init
+    @pieces_spaces[final_pos[0]][final_pos[1]] = saved_piece_final
+    check_after_move
   end
 
   def movement_valid?(movement, player)
     init_pos, final_pos, piece = movement_variables(movement)
     color = correct_color_piece?(piece, player)
-    check_afer_move = check_afer_move?(init_pos, final_pos, player)
+    check_after_move = check_after_move?(init_pos, final_pos, player)
     move = some_piece_move?(piece, init_pos, final_pos)
-    color && move && !check_afer_move
+    color && move && !check_after_move
+  end
+
+  def check?(player)
+    king_pos, sign = player.chess_color == 'white' ? [@white_king_position, 1] : [@black_king_position, -1]
+    pawns = check_of_pawns?(king_pos, sign)
+    rq_lines = check_of_rooks_or_queen?(king_pos, sign)
+    bq_diagnals = check_of_bishops_or_queen?(king_pos, sign)
+    knights = check_of_knights?(king_pos, sign)
+    pawns || rq_lines || bq_diagnals || knights
   end
 end
 
 require_relative 'user'
 
 if __FILE__ == $PROGRAM_NAME
-  table = ChessTable.new
-  table.draw_board
-  table.move_piece('f2f7')
-  p table.check?(ChessGameUser.new({ chess_color: 'black' }))
-  table.draw_board
+  # table = ChessTable.new
+  # table.draw_board
+  # table.move_piece('d1e7')
+  # table.move_piece('h1e7')
+  # table.move_piece('e7e5')
+  # table.move_piece('e5c5')
+  # table.move_piece('f1d7')
+  # table.move_piece('d7f7')
+  # table.move_piece('f7f3')
+  # table.move_piece('g1g7')
+  # table.move_piece('g7c7')
+  # table.move_piece('c7d6')
+  # table.move_piece('c5e5')
+  # table.move_piece('d8e7')
+  # p table.check?(ChessGameUser.new({ chess_color: 'black' }))
+  # table.draw_board
 end
