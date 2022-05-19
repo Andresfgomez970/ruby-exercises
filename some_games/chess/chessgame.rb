@@ -66,6 +66,8 @@ class ChessGame
   end
 
   def play_round
+    @table.draw_board
+
     current_player = @player1
     until game_ends?
       play_turn(current_player)

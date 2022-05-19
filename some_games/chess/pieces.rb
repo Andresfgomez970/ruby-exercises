@@ -15,11 +15,38 @@ BLACK_BISHOP = "\u2657"
 BLACK_KNIGHT = "\u2658"
 BLACK_PAWN = "\u2659"
 
-# class like this?
-class Piece
-  def initialize(initial = nil, symbol = nil)
-    @initial = initial
-    @symbol = symbol
+# general class for the movement of pieces
+module ValidMovesUtils
+  def diagonal?(init_pos, final_pos)
+    (init_pos[0] - final_pos[0]).abs == (init_pos[1] - final_pos[1]).abs
+  end
+
+  def diag_step_move(init_pos, final_pos)
+    step = [nil, nil]
+    step[0] = final_pos[0] > init_pos[0] ? 1 : -1
+    step[1] = final_pos[1] > init_pos[1] ? 1 : -1
+    step
+  end
+
+  def diag_valid_path?(init_pos, final_pos, sign)
+    step = diag_step_move(init_pos, final_pos)
+    same_pieces = sign == 1 ? @white_pieces : @black_pieces
+    n_steps = (init_pos[0] - final_pos[0]).abs
+    check_valid_path?(init_pos, same_pieces, step, n_steps)
+  end
+
+  def check_valid_path?(init_pos, same_pieces, step, n_steps)
+    # check free path
+    actual_pos = init_pos
+    (n_steps - 1).times do |_|
+      actual_pos = actual_pos.sum_array(step)
+      watch_piece = piece_in_pos(actual_pos)
+      return false if watch_piece != ' '
+    end
+    # check last is free or that it can be eaten
+    actual_pos = actual_pos.sum_array(step)
+    watch_piece = piece_in_pos(actual_pos)
+    same_pieces.include?(watch_piece) ? false : true
   end
 end
 
@@ -44,12 +71,12 @@ module PawnValidMoves
     one_step || (two_setps && correct_initial_pos)
   end
 
-  def diagonal?(init_pos, final_pos, sign)
+  def pawn_diagonal?(init_pos, final_pos, sign)
     (final_pos[0] - init_pos[0]) == 1 * sign && (final_pos[1] - init_pos[1]).abs == 1
   end
 
   def valid_pawn_diagonal_move?(init_pos, final_pos, sign)
-    diagonal = diagonal?(init_pos, final_pos, sign)
+    diagonal = pawn_diagonal?(init_pos, final_pos, sign)
     pieces_to_check = sign == 1 ? @black_pieces : @white_pieces
     eat = pieces_to_check.include?(@pieces_spaces[final_pos[0]][final_pos[1]])
     diagonal && eat
@@ -72,7 +99,7 @@ module PawnValidMoves
   end
 
   def valid_en_passant_move?(init_pos, final_pos, sign)
-    diagonal = diagonal?(init_pos, final_pos, sign)
+    diagonal = diagonal?(init_pos, final_pos)
     passant = passant_move?(final_pos)
     diagonal && passant
   end
@@ -85,21 +112,41 @@ module PawnValidMoves
   end
 end
 
-
+# implement all valid moves for bishop
 module BishopValidMoves
-  def bishop_movement_valid?(init_pos, final_pos)
-  end
+  include ValidMovesUtils
 
+  def bishop_movement_valid?(init_pos, final_pos, sign)
+    diagonal = diagonal?(init_pos, final_pos)
+    path_clear = diagonal ? diag_valid_path?(init_pos, final_pos, sign) : false 
+    diagonal && path_clear
+  end
+end
+
+# implement all valid moves for rook
+module RookValidMoves
   def rook_movement_valid?(init_pos, final_pos)
+    false
   end
+end
 
+# implement all valid moves for queen
+module QueenValidMoves
   def queen_movement_valid?(init_pos, final_pos)
+    false
   end
+end
 
+# implement all valid moves for king
+module KingValidMoves
   def king_movement_valid?(init_pos, final_pos)
+    false
   end
+end
 
+# implement all valid moves for knight
+module KnightValidMoves
   def knight_movement_valid?(init_pos, final_pos)
+    false
   end
-
 end

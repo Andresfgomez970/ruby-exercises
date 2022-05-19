@@ -133,7 +133,7 @@ class ChessTable < Table
   def check_white_pieces(piece, init_pos, final_pos)
     case piece
     when WHITE_PAWN then pawn_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_BISHOP then bishop_movement_valid?(init_pos, final_pos)
+    when WHITE_BISHOP then bishop_movement_valid?(init_pos, final_pos, 1)
     when WHITE_ROOK then rook_movement_valid?(init_pos, final_pos)
     when WHITE_KNIGHT then knight_movement_valid?(init_pos, final_pos)
     when WHITE_QUEEN then queen_movement_valid?(init_pos, final_pos)
@@ -144,7 +144,7 @@ class ChessTable < Table
   def check_black_pieces(piece, init_pos, final_pos)
     case piece
     when BLACK_PAWN then pawn_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos)
+    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos, 1)
     when BLACK_ROOK then rook_movement_valid?(init_pos, final_pos)
     when BLACK_KNIGHT then knight_movement_valid?(init_pos, final_pos)
     when BLACK_QUEEN then queen_movement_valid?(init_pos, final_pos)
