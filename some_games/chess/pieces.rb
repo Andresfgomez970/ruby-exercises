@@ -48,6 +48,10 @@ module ValidMovesUtils
     watch_piece = piece_in_pos(actual_pos)
     same_pieces.include?(watch_piece) ? false : true
   end
+
+  line_movement?
+  line_valid_path?
+
 end
 
 # module for valid moves of pawns
@@ -118,15 +122,17 @@ module BishopValidMoves
 
   def bishop_movement_valid?(init_pos, final_pos, sign)
     diagonal = diagonal?(init_pos, final_pos)
-    path_clear = diagonal ? diag_valid_path?(init_pos, final_pos, sign) : false 
-    diagonal && path_clear
+    valid_path = diagonal ? diag_valid_path?(init_pos, final_pos, sign) : false
+    diagonal && valid_path
   end
 end
 
 # implement all valid moves for rook
 module RookValidMoves
   def rook_movement_valid?(init_pos, final_pos)
-    false
+    line_move = line_movement?(init_pos, final_pos)
+    valid_path = line_movement ? line_valid_path?(init_pos, final_pos, sign) : false
+    line_move && valid_path
   end
 end
 

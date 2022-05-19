@@ -43,7 +43,7 @@ class ChessGame
   end
 
   def correct_notation_movement?(movement_str)
-    movement_str.match(/^[a-h][1-9][a-h][1-9]$/)
+    movement_str.match(/^[a-h][1-8][a-h][1-8]$/)
   end
 
   def get_valid_move(player, msg = 'select a move')
