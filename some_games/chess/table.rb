@@ -173,41 +173,12 @@ class ChessTable < Table
     [init_pos, final_pos, piece]
   end
 
-  def check_after_move?(init_pos, final_pos, player)
-    # save piece to replace in case position is not valid
-    saved_piece_init = piece_in_pos(init_pos)
-    saved_piece_final = piece_in_pos(final_pos)
-    draw_moved_piece(init_pos, final_pos)
-    check_after_move = check?(player)
-    @pieces_spaces[init_pos[0]][init_pos[1]] = saved_piece_init
-    @pieces_spaces[final_pos[0]][final_pos[1]] = saved_piece_final
-    check_after_move
-  end
-
   def movement_valid?(movement, player)
     init_pos, final_pos, piece = movement_variables(movement)
     color = correct_color_piece?(piece, player)
     check_after_move = check_after_move?(init_pos, final_pos, player)
     move = some_piece_move?(piece, init_pos, final_pos)
     color && move && !check_after_move
-  end
-
-  def check?(player)
-    king_pos, sign = player.chess_color == 'white' ? [@white_king_position, 1] : [@black_king_position, -1]
-    pawns = check_of_pawns?(king_pos, sign)
-    rq_lines = check_of_rooks_or_queen?(king_pos, sign)
-    bq_diagnals = check_of_bishops_or_queen?(king_pos, sign)
-    knights = check_of_knights?(king_pos, sign)
-    pawns || rq_lines || bq_diagnals || knights
-  end
-
-  def check_mate?(player)
-    steps = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
-    actual_pos = player.chess_color == 'white' ? @white_king_position : @black_king_position
-    steps.each do |step|
-      return false unless check_after_move?(actual_pos, actual_pos.sum_array(step), player)
-    end
-    true
   end
 end
 
