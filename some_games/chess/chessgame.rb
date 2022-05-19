@@ -43,12 +43,12 @@ class ChessGame
   end
 
   def correct_notation_movement?(movement_str)
-    movement_str.mathh(/^[a-h][1-9][a-h][1-9]$/)
+    movement_str.match(/^[a-h][1-9][a-h][1-9]$/)
   end
 
   def get_valid_move(player, msg = 'select a move')
     input = gets_message(msg)
-    correct_notation_movement?(input) && @table.movement_valid?(input, player) ? input : get_valid_move(msg)
+    correct_notation_movement?(input) && @table.movement_valid?(input, player) ? input : get_valid_move(player, 'select a valid move')
   end
 
   def play_turn(current_player)
@@ -61,12 +61,15 @@ class ChessGame
     false
   end
 
+  def change_players(current_player)
+    current_player == @player1 ? @player2 : @player1
+  end
+
   def play_round
-    @table.draw_board
     current_player = @player1
     until game_ends?
       play_turn(current_player)
-      # current_player = change_players(current_player)
+      current_player = change_players(current_player)
     end
     # update_scores(current_player)
   end
