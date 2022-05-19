@@ -87,6 +87,14 @@ class ChessTable < Table
     init_king_positions
   end
 
+  def default_initialize
+    super()
+    initialize_pieces_spaces
+    initialize_pieces_arrays
+    init_last_piece
+    init_king_positions
+  end
+
   def initialize_pieces_arrays
     @white_pieces = [WHITE_PAWN, WHITE_BISHOP, WHITE_ROOK, WHITE_KNIGHT, WHITE_QUEEN, WHITE_KING]
     @black_pieces = [BLACK_PAWN, BLACK_BISHOP, BLACK_ROOK, BLACK_KNIGHT, BLACK_QUEEN, BLACK_KING]
@@ -171,6 +179,10 @@ class ChessTable < Table
     final_pos = get_pos(movement, 2)
     piece = @pieces_spaces[init_pos[0]][init_pos[1]]
     [init_pos, final_pos, piece]
+  end
+
+  def draw_game?
+    false
   end
 
   def movement_valid?(movement, player)
