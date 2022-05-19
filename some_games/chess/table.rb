@@ -73,7 +73,11 @@ end
 class ChessTable < Table
   include PawnValidMoves
   include BishopValidMoves
+  include RookValidMoves
   include ChessCheckFunctionalities
+  include QueenValidMoves
+  include KingValidMoves
+  include KnightValidMoves
 
   def initialize
     super({ n_rows: 8, n_columns: 8 })
@@ -128,27 +132,29 @@ class ChessTable < Table
     final_pos = get_pos(movement, 2)
     draw_moved_piece(init_pos, final_pos)
     @last_piece_moved = { 'final_pos': final_pos, 'forward_distance': (init_pos[0] - final_pos[0]).abs }
+    @white_king_position = get_pos(final_pos) == WHITE_KING ? final_pos : @white_king_position
+    @black_king_position = get_pos(final_pos) == BLACK_KING ? final_pos : @black_king_position
   end
 
   def check_white_pieces(piece, init_pos, final_pos)
     case piece
     when WHITE_PAWN then pawn_movement_valid?(init_pos, final_pos, 1)
     when WHITE_BISHOP then bishop_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_ROOK then rook_movement_valid?(init_pos, final_pos)
-    when WHITE_KNIGHT then knight_movement_valid?(init_pos, final_pos)
-    when WHITE_QUEEN then queen_movement_valid?(init_pos, final_pos)
-    when WHITE_KING then king_movement_valid?(init_pos, final_pos)
+    when WHITE_ROOK then rook_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_KNIGHT then knight_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_QUEEN then queen_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_KING then king_movement_valid?(init_pos, final_pos, 1)
     end
   end
 
   def check_black_pieces(piece, init_pos, final_pos)
     case piece
     when BLACK_PAWN then pawn_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos, 1)
-    when BLACK_ROOK then rook_movement_valid?(init_pos, final_pos)
-    when BLACK_KNIGHT then knight_movement_valid?(init_pos, final_pos)
-    when BLACK_QUEEN then queen_movement_valid?(init_pos, final_pos)
-    when BLACK_KING then king_movement_valid?(init_pos, final_pos)
+    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_ROOK then rook_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_KNIGHT then knight_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_QUEEN then queen_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_KING then king_movement_valid?(init_pos, final_pos, -1)
     end
   end
 
@@ -193,6 +199,15 @@ class ChessTable < Table
     bq_diagnals = check_of_bishops_or_queen?(king_pos, sign)
     knights = check_of_knights?(king_pos, sign)
     pawns || rq_lines || bq_diagnals || knights
+  end
+
+  def check_mate?(player)
+    steps = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+    actual_pos = player.chess_color == 'white' ? @white_king_position : @black_king_position
+    steps.each do |step|
+      return false unless check_after_move?(actual_pos, actual_pos.sum_array(step), player)
+    end
+    true
   end
 end
 
