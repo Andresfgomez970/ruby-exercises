@@ -57,8 +57,8 @@ class ChessGame
     @table.draw_board
   end
 
-  def game_ends?
-    false
+  def game_ends?(current_player)
+    @table.check_mate?(current_player)
   end
 
   def change_players(current_player)
@@ -69,7 +69,7 @@ class ChessGame
     @table.draw_board
 
     current_player = @player1
-    until game_ends?
+    until game_ends?(current_player)
       play_turn(current_player)
       current_player = change_players(current_player)
     end
