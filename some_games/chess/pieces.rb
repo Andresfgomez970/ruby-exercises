@@ -118,7 +118,7 @@ module PawnValidMoves
     passant
   end
 
-  def valid_en_passant_move?(init_pos, final_pos, sign)
+  def valid_en_passant_move?(init_pos, final_pos)
     diagonal = diagonal?(init_pos, final_pos)
     passant = passant_move?(final_pos)
     diagonal && passant
@@ -127,7 +127,7 @@ module PawnValidMoves
   def pawn_movement_valid?(init_pos, final_pos, sign)
     move1_state = valid_pawn_forward_move?(init_pos, final_pos, sign)
     move2_state = valid_pawn_diagonal_move?(init_pos, final_pos, sign)
-    move3_state = valid_en_passant_move?(init_pos, final_pos, sign)
+    move3_state = valid_en_passant_move?(init_pos, final_pos)
     move1_state || move2_state || move3_state
   end
 end
@@ -184,6 +184,6 @@ module KnightValidMoves
     x1 = (init_pos[1] - final_pos[1]).abs
     same_pieces = sign == 1 ? @white_pieces : @black_pieces
     l_move = (x0 == 2 && x1 == 1) || (x0 == 1 && x1 == 2)
-    l_move || valid_pos?(final_pos) && !same_pieces.include?(get_pos(final_pos))
+    l_move && valid_pos?(final_pos) && !same_pieces.include?(get_pos(final_pos))
   end
 end
