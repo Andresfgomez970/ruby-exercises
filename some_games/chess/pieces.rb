@@ -21,6 +21,12 @@ module ValidMovesUtils
     (init_pos[0] - final_pos[0]).abs == (init_pos[1] - final_pos[1]).abs
   end
 
+  def line_movement?(init_pos, final_pos)
+    row = (init_pos[0] - final_pos[0]).abs.positive? && init_pos[1] == final_pos[1]
+    col = (init_pos[1] - final_pos[1]).abs.positive? && init_pos[0] == final_pos[0]
+    row || col
+  end
+
   def diag_step_move(init_pos, final_pos)
     step = [nil, nil]
     step[0] = final_pos[0] > init_pos[0] ? 1 : -1
@@ -28,10 +34,24 @@ module ValidMovesUtils
     step
   end
 
+  def line_step_move(init_pos, final_pos)
+    step = [nil, nil]
+    step[0] = (final_pos[0] - init_pos[0]) <=> 0
+    step[1] = (final_pos[1] - init_pos[1]) <=> 0
+    step
+  end
+
   def diag_valid_path?(init_pos, final_pos, sign)
     step = diag_step_move(init_pos, final_pos)
     same_pieces = sign == 1 ? @white_pieces : @black_pieces
     n_steps = (init_pos[0] - final_pos[0]).abs
+    check_valid_path?(init_pos, same_pieces, step, n_steps)
+  end
+
+  def line_valid_path?(init_pos, final_pos, sign)
+    step = line_step_move(init_pos, final_pos)
+    same_pieces = sign == 1 ? @white_pieces : @black_pieces
+    n_steps = (init_pos[0] - final_pos[0]).abs + (init_pos[1] - final_pos[1]).abs
     check_valid_path?(init_pos, same_pieces, step, n_steps)
   end
 
@@ -48,10 +68,6 @@ module ValidMovesUtils
     watch_piece = piece_in_pos(actual_pos)
     same_pieces.include?(watch_piece) ? false : true
   end
-
-  line_movement?
-  line_valid_path?
-
 end
 
 # module for valid moves of pawns
@@ -129,30 +145,45 @@ end
 
 # implement all valid moves for rook
 module RookValidMoves
-  def rook_movement_valid?(init_pos, final_pos)
+  include ValidMovesUtils
+
+  def rook_movement_valid?(init_pos, final_pos, sign)
     line_move = line_movement?(init_pos, final_pos)
-    valid_path = line_movement ? line_valid_path?(init_pos, final_pos, sign) : false
+    valid_path = line_move ? line_valid_path?(init_pos, final_pos, sign) : false
     line_move && valid_path
   end
 end
 
 # implement all valid moves for queen
 module QueenValidMoves
-  def queen_movement_valid?(init_pos, final_pos)
-    false
+  include BishopValidMoves
+  include RookValidMoves
+
+  def queen_movement_valid?(init_pos, final_pos, sign)
+    rook_movement_valid?(init_pos, final_pos, sign) || bishop_movement_valid?(init_pos, final_pos, sign)
   end
 end
 
 # implement all valid moves for king
 module KingValidMoves
-  def king_movement_valid?(init_pos, final_pos)
-    false
+  def king_movement_valid?(init_pos, final_pos, sign)
+    x0 = (init_pos[0] - final_pos[0]).abs
+    x1 = (init_pos[1] - final_pos[1]).abs
+    distance = x0 + x1
+    diag1 = x0 == 1 && x1 == 1
+    same_pieces = sign == 1 ? @white_pieces : @black_pieces
+    # Note that check after move is checked independently
+    (distance == 1 || diag1) && !same_pieces.include?(get_pos(final_pos))
   end
 end
 
 # implement all valid moves for knight
 module KnightValidMoves
-  def knight_movement_valid?(init_pos, final_pos)
-    false
+  def knight_movement_valid?(init_pos, final_pos, sign)
+    x0 = (init_pos[0] - final_pos[0]).abs
+    x1 = (init_pos[1] - final_pos[1]).abs
+    same_pieces = sign == 1 ? @white_pieces : @black_pieces
+    l_move = (x0 == 2 && x1 == 1) || (x0 == 1 && x1 == 2)
+    l_move || valid_pos?(final_pos) && !same_pieces.include?(get_pos(final_pos))
   end
 end
