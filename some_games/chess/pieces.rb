@@ -51,8 +51,8 @@ module PawnValidMoves
   def valid_pawn_diagonal_move?(init_pos, final_pos, sign)
     diagonal = diagonal?(init_pos, final_pos, sign)
     pieces_to_check = sign == 1 ? @black_pieces : @white_pieces
-    eat_black = pieces_to_check.include?(@pieces_spaces[final_pos[0]][final_pos[1]])
-    diagonal && eat_black
+    eat = pieces_to_check.include?(@pieces_spaces[final_pos[0]][final_pos[1]])
+    diagonal && eat
   end
 
   def passant_move?(final_pos)
