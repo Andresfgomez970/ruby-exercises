@@ -172,5 +172,3 @@ class ChessGame
     play_recursive
   end
 end
-
-ChessGame.new.play_game
