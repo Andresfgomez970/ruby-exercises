@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
 # file to call the game
-require_relative 'game'
+require_relative 'chessgame'
 
-ChessGame.play_game
+ChessGame.new.play_game

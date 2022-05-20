@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 require_relative 'utils'
 require_relative 'pieces'
+require_relative 'chess_utils'
 
 # Class that implements a basic table
 class Table
   include BasicUtils
+  include BasicSerializable
 
   def initialize(table_params = { n_rows: 0, n_columns: 0 })
     @n_rows = table_params.fetch(:n_rows, 0)
@@ -81,10 +83,7 @@ class ChessTable < Table
 
   def initialize
     super({ n_rows: 8, n_columns: 8 })
-    initialize_pieces_spaces
-    initialize_pieces_arrays
-    init_last_piece
-    init_king_positions
+    default_initialize
   end
 
   def default_initialize
@@ -113,6 +112,7 @@ class ChessTable < Table
   end
 
   def draw_board
+    # add correct row names
     row_names = ('1'..'8').to_a
     super(row_names)
     # add column names
@@ -197,20 +197,6 @@ end
 require_relative 'user'
 
 if __FILE__ == $PROGRAM_NAME
-  # table = ChessTable.new
-  # table.draw_board
-  # table.move_piece('d1e7')
-  # table.move_piece('h1e7')
-  # table.move_piece('e7e5')
-  # table.move_piece('e5c5')
-  # table.move_piece('f1d7')
-  # table.move_piece('d7f7')
-  # table.move_piece('f7f3')
-  # table.move_piece('g1g7')
-  # table.move_piece('g7c7')
-  # table.move_piece('c7d6')
-  # table.move_piece('c5e5')
-  # table.move_piece('d8e7')
-  # p table.check?(ChessGameUser.new({ chess_color: 'black' }))
-  # table.draw_board
+  table = Table.new
+  p table.serialize
 end
