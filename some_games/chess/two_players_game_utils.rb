@@ -8,19 +8,27 @@ module TwoPLayersGameUtils
     current_player == @player1 ? @player2 : @player1
   end
 
+  def welcome_mesage
+    puts "Welcome to #{self.class}, we hope you enjoy playing\n\n"
+  end
+
   def play_round
     @table.draw_board
 
-    current_player = @player1
-    until game_ends?(current_player)
-      play_turn(current_player)
-      current_player = change_players(current_player)
+    until game_ends?(@current_player)
+      play_turn(@current_player)
+      @current_player = change_players(@current_player)
     end
     update_scores(current_player)
   end
 
   def update_scores(current_player)
     change_players(current_player).score += 1 if @someone_won_state
+  end
+
+  def end_save_game_message
+    puts 'The game has been successfully saved ... see you later!'
+    final_message
   end
 
   def end_round
@@ -67,8 +75,10 @@ module TwoPLayersGameUtils
   end
 
   def prepare_game
+    welcome_mesage
     @play_mode = obtain_play_mode
     create_players
+    (load_game if load_game?) if methods.include?(:load_game)
   end
 
   def winner_user
@@ -90,6 +100,7 @@ module TwoPLayersGameUtils
     end_round
 
     if exit_game?
+      (save if save_game?) if methods.include?(:save)
       end_game
     else
       reset_for_new_game
