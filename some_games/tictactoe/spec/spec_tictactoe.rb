@@ -1,4 +1,5 @@
 require_relative '../tictactoe'
+require_relative '../user'
 
 describe Table do
   subject(:table) { described_class.new }
