@@ -3,11 +3,13 @@
 require_relative 'user'
 require_relative 'table'
 require_relative 'two_players_game_utils'
+require_relative 'serialization_utils'
 
 # Ches class for the game
 class ChessGame
   include BasicUtils
   include TwoPLayersGameUtils
+  include BasicSerializable
 
   def initialize(player1 = ChessGameUser.new({ chess_color: 'white' }),
                  player2 = ChessGameUser.new({ chess_color: 'black' }),
@@ -15,6 +17,7 @@ class ChessGame
     @player1 = player1
     @player2 = player2
     @table = table
+    @current_player = @player1
   end
 
   def correct_notation_movement?(movement_str)
@@ -22,18 +25,28 @@ class ChessGame
   end
 
   def valid_input?(input, player)
-    correct_notation_movement?(input) && @table.movement_valid?(input, player)
+    correct_notation_movement?(input) && @table.movement_valid?(input, player) || input == 'save'
   end
 
-  def get_valid_move(player, msg = 'Please select a move')
-    input = gets_message("#{msg} #{player.name}")
+  def get_valid_move(player, msg = 'Please select a move or type save')
+    input = gets_message("#{msg} #{player.name} or type 'save' to save the game")
     new_msg = "Please select a valid move #{player.name}"
     valid_input?(input, player) ? input : get_valid_move(player, new_msg)
   end
 
+  def update_game_state(input)
+    if input == 'save'
+      save
+      end_save_game_message
+      exit
+    else
+      @table.move_piece(input)
+    end
+  end
+
   def play_turn(current_player)
     input = get_valid_move(current_player)
-    @table.move_piece(input)
+    update_game_state(input)
     @table.draw_board
   end
 
@@ -56,25 +69,28 @@ class ChessGame
     play_recursive
   end
 
+  def save
+    save_to_json
+  end
+
   def save_to_json
     Dir.mkdir('output') unless Dir.exist?('output')
-    File.open("output/chess_game_#{@player1.name}vs#{@player2.name}.json", 'w') do |f|
-      f.write(to_json)
+    File.open("output/#{self.class}_#{@player1.name}_and_#{@player2.name}.json", 'w') do |f|
+      f.write(serialize)
     end
   end
 
-  def fetch_state_game(data_json); end
-
-  def fetch_user_info(data_json); end
-
-  def init_from_json(json_filename)
-    data_json = JSON.parse(File.read(json_filename))
-    standart_init(data_json['data']['filename'])
-    fetch_state_game(data_json)
-    fetch_user_info(data_json)
-    # substract in order to count correcly, this permits
-    #  to enter again to play_round and have a correct number
-    #  of rounds
-    @rounds -= 1 if @wrong_number == @max_wrong
+  def load_game
+    json_filename = "output/#{self.class}_#{@player1.name}_and_#{@player2.name}.json"
+    unserialize(File.read(json_filename))
   end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  player1 = ChessGameUser.new({ name: 'andres' })
+  game = ChessGame.new(player1)
+  game.save_to_json
+  json_filename = 'output/chess_game_andresvsdefault_name.json'
+  game.unserialize(File.read(json_filename))
+  game.instance_variable_get(:@table).draw_board
 end
