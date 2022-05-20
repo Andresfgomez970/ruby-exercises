@@ -2,6 +2,7 @@
 require_relative 'utils'
 require_relative 'pieces'
 require_relative 'chess_utils'
+require_relative 'serialization_utils'
 
 # Class that implements a basic table
 class Table
@@ -197,6 +198,6 @@ end
 require_relative 'user'
 
 if __FILE__ == $PROGRAM_NAME
-  table = Table.new
+  table = ChessTable.new
   p table.serialize
 end
