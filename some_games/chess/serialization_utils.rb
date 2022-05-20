@@ -7,8 +7,8 @@ module BasicSerializable
   #class (e.g. MessagePack, JSON, YAML) to get a different
   #serialization
   @@serializer = JSON
-  @@default_classes = [Integer, Float, String, Array, Hash, NilClass, Symbol]
-  @@default_classes_name = ['Integer', 'Float', 'String', 'Array', 'Hash', 'NilClass', 'Symbol']
+  @@default_classes = [Integer, Float, String, Array, Hash, NilClass, Symbol, FalseClass]
+  @@default_classes_name = ['Integer', 'Float', 'String', 'Array', 'Hash', 'NilClass', 'Symbol', 'FalseClass']
 
 
   def serialize(to_serialize = self)
