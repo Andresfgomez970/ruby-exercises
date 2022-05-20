@@ -16,6 +16,18 @@ module BasicUtils
     %w[y n].include?(answer)
   end
 
+  def save_game?
+    answer = gets_message('Do you want to save the game? (y/n)')
+    answer = gets_message('please enter a valid option: (y/n)') until valid_yn_answer?(answer)
+    answer == 'y'
+  end
+
+  def load_game?
+    answer = gets_message('Do you want to load a saved game? (y/n)')
+    answer = gets_message('please enter a valid option: (y/n)') until valid_yn_answer?(answer)
+    answer == 'y'
+  end
+
   def exit_game?
     answer = gets_message('Do you want to finish the game? (y/n)')
     answer = gets_message('please enter a valid option: (y/n)') until valid_yn_answer?(answer)
