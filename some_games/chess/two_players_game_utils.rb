@@ -96,17 +96,4 @@ module TwoPLayersGameUtils
       play_recursive
     end
   end
-
-  def create_players
-    @player1.name = gets_message('Please enter player 1 name')
-    @player2.name = @play_mode == '1' ? 'computer' : gets_message('Please enter player 2 name')
-  end
-
-
-  def prepare_game
-    @play_mode = obtain_play_mode
-    create_players
-  end
-  
-
 end
