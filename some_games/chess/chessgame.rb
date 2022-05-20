@@ -90,7 +90,7 @@ if __FILE__ == $PROGRAM_NAME
   player1 = ChessGameUser.new({ name: 'andres' })
   game = ChessGame.new(player1)
   game.save_to_json
-  json_filename = 'output/chess_game_andresvsdefault_name.json'
+  json_filename = 'output/ChessGame_andres_and_juan.json'
   game.unserialize(File.read(json_filename))
   game.instance_variable_get(:@table).draw_board
 end
