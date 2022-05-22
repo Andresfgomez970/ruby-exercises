@@ -93,6 +93,7 @@ class ChessTable < Table
     initialize_pieces_arrays
     init_last_piece
     init_king_positions
+    init_castling_state
   end
 
   def initialize_pieces_arrays
@@ -110,6 +111,10 @@ class ChessTable < Table
   def init_king_positions
     @white_king_position = [0, 4]
     @black_king_position = [7, 4]
+  end
+
+  def init_castling_state
+    @castling_is_first_move = { 'white-right' => true, 'white-left' => true, 'black-right' => true, 'black-left' => true }
   end
 
   def draw_board
@@ -132,6 +137,30 @@ class ChessTable < Table
     [initial_row, initial_col]
   end
 
+  def update_king_positions(final_pos)
+    @white_king_position = piece_in_pos(final_pos) == WHITE_KING ? final_pos : @white_king_position
+    @black_king_position = piece_in_pos(final_pos) == BLACK_KING ? final_pos : @black_king_position
+  end
+
+  def update_castling_dictionary(pos, piece, king_moved, modify_key)
+    @castling_is_first_move[modify_key] = false if piece_in_pos(pos) != piece || king_moved
+  end
+
+  def update_castling_state
+    white_king_moved = @white_king_position != [0, 4]
+    black_king_moved = @black_king_position != [7, 4]
+    update_castling_dictionary([0, 7], WHITE_ROOK, white_king_moved, 'white-right')
+    update_castling_dictionary([0, 0], WHITE_ROOK, white_king_moved, 'white-left')
+    update_castling_dictionary([7, 7], BLACK_ROOK, black_king_moved, 'black-right')
+    update_castling_dictionary([7, 0], BLACK_ROOK, black_king_moved, 'black-left')
+  end
+
+  def update_state_variables(init_pos, final_pos)
+    @last_piece_moved = { 'final_pos': final_pos, 'forward_distance': (init_pos[0] - final_pos[0]).abs }
+    update_king_positions(final_pos)
+    update_castling_state
+  end
+
   def move_piece(movement)
     # movement is a string with the algebraic notation of chess
     # for example: 'e2e4'
@@ -140,9 +169,7 @@ class ChessTable < Table
     init_pos  = get_pos(movement)
     final_pos = get_pos(movement, 2)
     draw_moved_piece(init_pos, final_pos)
-    @last_piece_moved = { 'final_pos': final_pos, 'forward_distance': (init_pos[0] - final_pos[0]).abs }
-    @white_king_position = get_pos(final_pos) == WHITE_KING ? final_pos : @white_king_position
-    @black_king_position = get_pos(final_pos) == BLACK_KING ? final_pos : @black_king_position
+    update_state_variables(init_pos, final_pos)
   end
 
   def check_white_pieces(piece, init_pos, final_pos)
