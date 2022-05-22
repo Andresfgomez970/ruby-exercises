@@ -172,8 +172,71 @@ module KingValidMoves
     distance = x0 + x1
     diag1 = x0 == 1 && x1 == 1
     same_pieces = sign == 1 ? @white_pieces : @black_pieces
+    castling = castling?(init_pos, final_pos, sign)
     # Note that check after move is checked independently
-    (distance == 1 || diag1) && !same_pieces.include?(get_pos(final_pos))
+    (distance == 1 || diag1) && !same_pieces.include?(get_pos(final_pos)) || castling
+  end
+
+  def castling_is_first_moved?(init_pos, final_pos, sign)
+    row_to_check, color = sign == 1 ? [0, 'white'] : [7, 'black']
+    if init_pos == [row_to_check, 4] && final_pos == [row_to_check, 2]
+      return @castling_is_first_move["#{color}-left"]
+    elsif init_pos == [row_to_check, 4] && final_pos == [row_to_check, 6]
+      return @castling_is_first_move["#{color}-right"]
+    end
+    false
+  end
+
+  def direction_to_check(final_pos, row_to_check)
+    case final_pos
+    when [row_to_check, 6] then 1
+    when [row_to_check, 2] then -1
+    else 0
+    end
+  end
+
+  def castling_free_path?(init_pos, final_pos, sign)
+    row_to_check = sign == 1 ? 0 : 7
+    step = direction_to_check(final_pos, row_to_check)
+    return false if step.zero?
+
+    actual_pos = init_pos
+    2.times do |_|
+      actual_pos = actual_pos.sum_array([0, step])
+      return false if piece_in_pos(actual_pos) != ' '
+    end
+    true
+  end
+
+  def castling_not_check?(init_pos, final_pos, sign)
+    row_to_check = sign == 1 ? 0 : 7
+    step = direction_to_check(final_pos, row_to_check)
+    return false if step.zero?
+
+    3.times do |index|
+      actual_pos = init_pos.sum_array([0, step * index])
+      return false if piece_can_be_eaten?(actual_pos, sign)
+    end
+    true
+  end
+
+  def update_castling_rook(init_pos, final_pos, sign)
+    row_to_check = sign == 1 ? 0 : 7
+    if init_pos == [row_to_check, 4] && final_pos == [row_to_check, 2]
+      draw_moved_piece([row_to_check, 0], [row_to_check, 3])
+    elsif init_pos == [row_to_check, 4] && final_pos == [row_to_check, 6]
+      draw_moved_piece([row_to_check, 7], [row_to_check, 5])
+    end
+    false
+  end
+
+  def castling?(init_pos, final_pos, sign)
+    castling_is_first_moved = castling_is_first_moved?(init_pos, final_pos, sign)
+    castling_free_path = castling_free_path?(init_pos, final_pos, sign)
+    castling_not_check = castling_not_check?(init_pos, final_pos, sign)
+    castling_condition = castling_is_first_moved && castling_free_path && castling_not_check
+    update_castling_rook(init_pos, final_pos, sign) if castling_condition
+    castling_condition
   end
 end
 
