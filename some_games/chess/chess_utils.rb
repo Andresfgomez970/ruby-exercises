@@ -67,15 +67,15 @@ module ChessCheckFunctionalities
   def check_bq_dgright?(pos, menacing_pieces, same_pieces, return_pos = false)
     up_diag_steps = [7 - pos[0], pos[1]].min # up, right min
     up_part = check_along?(pos, menacing_pieces, same_pieces, up_diag_steps, [1, 1], return_pos)
-    down_diag_steps = [pos[0], 7 - pos[1]].min # down, left min
+    down_diag_steps = [pos[0], pos[1]].min # down, left min
     down_part = check_along?(pos, menacing_pieces, same_pieces, down_diag_steps, [-1, -1], return_pos)
     up_part || down_part
   end
 
   def check_bq_dgleft?(pos, menacing_pieces, same_pieces, return_pos = false)
-    up_diag_steps = [7 - pos[0], 7 - pos[1]].min # up, left min
+    up_diag_steps = [7 - pos[0], pos[1]].min # up, left min
     up_part = check_along?(pos, menacing_pieces, same_pieces, up_diag_steps, [1, -1], return_pos)
-    down_diag_steps = [pos[0], pos[1]].min # down, right min
+    down_diag_steps = [pos[0], 7 - pos[1]].min # down, right min
     down_part = check_along?(pos, menacing_pieces, same_pieces, down_diag_steps, [-1, 1], return_pos)
     up_part || down_part
   end
