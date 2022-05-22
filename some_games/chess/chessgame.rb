@@ -28,7 +28,7 @@ class ChessGame
     correct_notation_movement?(input) && @table.movement_valid?(input, player) || input == 'save'
   end
 
-  def get_valid_move(player, msg = 'Please select a move or type save')
+  def get_valid_move(player, msg = 'Please select a move')
     input = gets_message("#{msg} #{player.name} or type 'save' to save the game")
     new_msg = "Please select a valid move #{player.name}"
     valid_input?(input, player) ? input : get_valid_move(player, new_msg)
