@@ -1,15 +1,11 @@
 require 'json'
 
-#mixin
+# mixin
 module BasicSerializable
-
-  #should point to a class; change to a different
-  #class (e.g. MessagePack, JSON, YAML) to get a different
-  #serialization
+  # should point to a class; change to a different class (e.g. MessagePack, JSON, YAML) to get a different serialization
   @@serializer = JSON
   @@default_classes = [Integer, Float, String, Array, Hash, NilClass, Symbol, FalseClass]
   @@default_classes_name = ['Integer', 'Float', 'String', 'Array', 'Hash', 'NilClass', 'Symbol', 'FalseClass']
-
 
   def serialize(to_serialize = self)
     obj = {}
@@ -31,7 +27,7 @@ module BasicSerializable
 
   def unserialize(string, to_unserialize = self)
     obj = @@serializer.parse(string)
-    
+
     obj.keys.each do |key|
       class_of_var = obj[key]['class_name']
       if @@default_classes_name.include?(class_of_var)
