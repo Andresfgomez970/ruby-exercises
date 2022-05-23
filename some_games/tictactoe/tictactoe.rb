@@ -1,8 +1,15 @@
 # frozen_string_literal: true
 
+require_relative 'utils'
+require_relative 'table'
+require_relative 'user'
+
 # Class that has all the functionalities of the game
 class TicTacToe
   include BasicUtils
+
+  attr_reader :table
+
 
   def initialize(users = [], table = Table.new)
     @users = users
