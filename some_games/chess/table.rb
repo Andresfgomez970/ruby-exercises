@@ -80,6 +80,7 @@ class ChessTable < Table
   include KingValidMoves
   include KnightValidMoves
   include ChessCorrectMovementFunctionalities
+  include ReadingMovementFunctionalities
 
   def initialize
     super({ n_rows: 8, n_columns: 8 })
@@ -131,12 +132,6 @@ class ChessTable < Table
     puts "\n"
   end
 
-  def get_pos(movement, from = 0)
-    initial_col = movement[0 + from].ord - 'a'.ord
-    initial_row = movement[1 + from].to_i - 1
-    [initial_row, initial_col]
-  end
-
   def update_king_positions(final_pos)
     @white_king_position = piece_in_pos(final_pos) == WHITE_KING ? final_pos : @white_king_position
     @black_king_position = piece_in_pos(final_pos) == BLACK_KING ? final_pos : @black_king_position
@@ -180,13 +175,6 @@ class ChessTable < Table
     init_pos  = get_pos(movement)
     final_pos = get_pos(movement, 2)
     draw_moved_piece(init_pos, final_pos)
-  end
-
-  def movement_variables(movement)
-    init_pos  = get_pos(movement)
-    final_pos = get_pos(movement, 2)
-    piece = @pieces_spaces[init_pos[0]][init_pos[1]]
-    [init_pos, final_pos, piece]
   end
 
   def draw_game?
