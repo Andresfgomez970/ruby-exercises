@@ -34,10 +34,14 @@ module BasicUtils
     answer == 'y'
   end
 
-  def heaviside(x)
-    return 0 if x.negative?
-    return 0.5 if x.zero?
-    return 1 if x.positive?
+  def heaviside(x_val)
+    return 0 if x_val.negative?
+    return 0.5 if x_val.zero?
+    return 1 if x_val.positive?
+  end
+
+  def reverse_index(array, index)
+    array.length - index - 1
   end
 end
 

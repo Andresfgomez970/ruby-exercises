@@ -41,10 +41,6 @@ class Table
     row_res
   end
 
-  def reverse_index(array, index)
-    array.length - index - 1
-  end
-
   def draw_board(row_names = Array.new(@n_rows, ' '))
     @n_rows.times do |index|
       # reverse index is used with the idea that the bottom would
