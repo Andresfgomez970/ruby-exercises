@@ -1,7 +1,9 @@
 # frozen_string_literal: true
+require_relative 'utils'
 
 # functionalities to check for check in chess game
 module ChessCheckFunctionalities
+
   ########
   # Pawns
   def check_of_pawns?(pos, sign, return_pos = false)
@@ -16,15 +18,11 @@ module ChessCheckFunctionalities
   end
 
   def possible_menacing_pawns_pos(pos, sign)
-    poss_pawn1 = pos.sum_array([1 * sign, 1])
-    poss_pawn2 = pos.sum_array([1 * sign, -1])
-    [poss_pawn1, poss_pawn2]
+    [1, -1].each.map { |val| pos.sum_array([1 * sign, val]) }
   end
 
   def pawn_menacing_states(pos_pawn1, pos_pawn2, menacing_piece)
-    menacing_pawn1 = piece_in_pos(pos_pawn1) == menacing_piece
-    menacing_pawn2 = piece_in_pos(pos_pawn2) == menacing_piece
-    [menacing_pawn1, menacing_pawn2]
+    [pos_pawn1, pos_pawn2].each.map { |pos| piece_in_pos(pos) == menacing_piece }
   end
 
   def menacing_pawn(pos_p1, pos_p2, state1, state2)
@@ -34,31 +32,30 @@ module ChessCheckFunctionalities
 
   ########
   # Rooks and queen in movements like a rook
-  def check_of_rooks_or_queen?(pos, sign, return_pos = false)
-    menacing_pieces = { 1 => [BLACK_ROOK, BLACK_QUEEN], -1 => [WHITE_ROOK, WHITE_QUEEN] }[sign]
+  def menacing_and_allied_pieces(sign, check_type)
+    case check_type
+    when 'rq' then menacing_pieces = { 1 => [BLACK_ROOK, BLACK_QUEEN], -1 => [WHITE_ROOK, WHITE_QUEEN] }[sign]
+    when 'bq' then menacing_pieces = { 1 => [BLACK_BISHOP, BLACK_QUEEN], -1 => [WHITE_BISHOP, WHITE_QUEEN] }[sign]
+    end
     same_pieces = sign == 1 ? @white_pieces : @black_pieces
-    rows = check_rq_rows?(pos, menacing_pieces, same_pieces, return_pos)
-    cols = check_rq_cols?(pos, menacing_pieces, same_pieces, return_pos)
-    rows || cols
+    [menacing_pieces, same_pieces]
   end
 
-  def check_rq_rows?(pos, menacing_pieces, same_pieces, return_pos = false)
-    upp_row = check_along?(pos, menacing_pieces, same_pieces, 7 - pos[0], [1, 0],return_pos)
-    down_row = check_along?(pos, menacing_pieces, same_pieces, pos[0], [-1, 0], return_pos)
-    upp_row || down_row
-  end
+  def check_of_rooks_or_queen?(pos, sign, return_pos = false)
+    menacing_pieces, same_pieces = menacing_and_allied_pieces(sign, 'rq')
+    check_states = [[1, 0], [-1, 0], [0, 1], [0, -1]].each.map do |step|
+      n_steps = 7 * heaviside(step.sum) - pos[step.find_index(step.sum)] * step.sum
+      check_along?(pos, menacing_pieces, same_pieces, n_steps, step)
+    end
+    return check_states.reduce(true) { |_, el| el != true ? el : true } if return_pos
 
-  def check_rq_cols?(pos, menacing_pieces, same_pieces, return_pos = false)
-    right_col = check_along?(pos, menacing_pieces, same_pieces, 7 - pos[1], [0, 1], return_pos)
-    left_col = check_along?(pos, menacing_pieces, same_pieces, pos[1], [0, -1], return_pos)
-    left_col || right_col
+    check_states.all?
   end
 
   ########
   # Rooks and queen in movements like a bishop
   def check_of_bishops_or_queen?(pos, sign, return_pos = false)
-    menacing_pieces = { 1 => [BLACK_BISHOP, BLACK_QUEEN], -1 => [WHITE_BISHOP, WHITE_QUEEN] }[sign]
-    same_pieces = sign == 1 ? @white_pieces : @black_pieces
+    menacing_pieces, same_pieces = menacing_and_allied_pieces(sign, 'bq')
     dgright = check_bq_dgright?(pos, menacing_pieces, same_pieces, return_pos)
     dgleft = check_bq_dgleft?(pos, menacing_pieces, same_pieces, return_pos)
     dgright || dgleft

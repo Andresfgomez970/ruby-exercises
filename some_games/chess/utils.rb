@@ -33,6 +33,12 @@ module BasicUtils
     answer = gets_message('please enter a valid option: (y/n)') until valid_yn_answer?(answer)
     answer == 'y'
   end
+
+  def heaviside(x)
+    return 0 if x.negative?
+    return 0.5 if x.zero?
+    return 1 if x.positive?
+  end
 end
 
 # add functionatalities to the array class
