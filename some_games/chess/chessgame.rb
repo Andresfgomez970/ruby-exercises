@@ -21,7 +21,9 @@ class ChessGame
   end
 
   def correct_notation_movement?(movement_str)
-    movement_str.match(/^[a-h][1-8][a-h][1-8]$/)
+    from_to_notation = /^[a-h][1-8][a-h][1-8]$/
+    algebraic_notation = /((^(B|K|N|R|Q| ){1}[a-h][1-8]$)|(^(B|K|N|R|Q|e){1}x[a-h][1-8]$)|(O-O)|(O-O-O)){1}/
+    movement_str.match(from_to_notation) || movement_str.mathc(algebraic_notation)
   end
 
   def valid_input?(input, player)
