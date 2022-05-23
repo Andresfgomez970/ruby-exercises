@@ -40,7 +40,7 @@ class ChessGame
       end_save_game_message
       exit
     else
-      @table.move_piece(input)
+      @table.update_table_state(input)
     end
   end
 
@@ -61,12 +61,6 @@ class ChessGame
     player1 = { name: @player1.name, score: @player1.score }
     @player1 = ChessGameUser.new({ chess_color: @player1.chess_color, name: @player2.name, score: @player2.score })
     @player2 = ChessGameUser.new({ chess_color: @player2.chess_color, name: player1[:name], score: player1[:score] })
-  end
-
-  # standard, but here
-  def play_game
-    prepare_game
-    play_recursive
   end
 
   def save
