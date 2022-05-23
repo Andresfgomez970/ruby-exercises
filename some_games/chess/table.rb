@@ -47,6 +47,8 @@ class Table
 
   def draw_board(row_names = Array.new(@n_rows, ' '))
     @n_rows.times do |index|
+      # reverse index is used with the idea that the bottom would
+      #   have the lower indexetion.
       reverse_i = reverse_index(@pieces_spaces, index)
       puts row(@pieces_spaces[reverse_i], row_names[reverse_i])
     end
@@ -81,6 +83,7 @@ class ChessTable < Table
   include QueenValidMoves
   include KingValidMoves
   include KnightValidMoves
+  include ChessCorrectMovementFunctionalities
 
   def initialize
     super({ n_rows: 8, n_columns: 8 })
@@ -96,16 +99,20 @@ class ChessTable < Table
     init_castling_state
   end
 
-  def initialize_pieces_arrays
-    @white_pieces = [WHITE_PAWN, WHITE_BISHOP, WHITE_ROOK, WHITE_KNIGHT, WHITE_QUEEN, WHITE_KING]
-    @black_pieces = [BLACK_PAWN, BLACK_BISHOP, BLACK_ROOK, BLACK_KNIGHT, BLACK_QUEEN, BLACK_KING]
-  end
-
   def initialize_pieces_spaces
     @pieces_spaces[0] = [WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK]
     @pieces_spaces[1] = [WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN]
     @pieces_spaces[6] = [BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN]
     @pieces_spaces[7] = [BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK]
+  end
+
+  def initialize_pieces_arrays
+    @white_pieces = [WHITE_PAWN, WHITE_BISHOP, WHITE_ROOK, WHITE_KNIGHT, WHITE_QUEEN, WHITE_KING]
+    @black_pieces = [BLACK_PAWN, BLACK_BISHOP, BLACK_ROOK, BLACK_KNIGHT, BLACK_QUEEN, BLACK_KING]
+  end
+
+  def init_last_piece
+    @last_piece_moved = nil
   end
 
   def init_king_positions
@@ -114,7 +121,8 @@ class ChessTable < Table
   end
 
   def init_castling_state
-    @castling_is_first_move = { 'white-right' => true, 'white-left' => true, 'black-right' => true, 'black-left' => true }
+    @castling_is_first_move = { 'white-right' => true, 'white-left' => true, 'black-right' => true,
+                                'black-left' => true }
   end
 
   def draw_board
@@ -125,10 +133,6 @@ class ChessTable < Table
     puts one_level_row(('a'..'h').to_a, ' ')
     # add space for aesthetic purposes
     puts "\n"
-  end
-
-  def init_last_piece
-    @last_piece_moved = nil
   end
 
   def get_pos(movement, from = 0)
@@ -182,36 +186,6 @@ class ChessTable < Table
     draw_moved_piece(init_pos, final_pos)
   end
 
-  def check_white_pieces(piece, init_pos, final_pos)
-    case piece
-    when WHITE_PAWN then pawn_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_BISHOP then bishop_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_ROOK then rook_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_KNIGHT then knight_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_QUEEN then queen_movement_valid?(init_pos, final_pos, 1)
-    when WHITE_KING then king_movement_valid?(init_pos, final_pos, 1)
-    end
-  end
-
-  def check_black_pieces(piece, init_pos, final_pos)
-    case piece
-    when BLACK_PAWN then pawn_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_ROOK then rook_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_KNIGHT then knight_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_QUEEN then queen_movement_valid?(init_pos, final_pos, -1)
-    when BLACK_KING then king_movement_valid?(init_pos, final_pos, -1)
-    end
-  end
-
-  def some_piece_move?(piece, init_pos, final_pos)
-    check_white_pieces(piece, init_pos, final_pos) || check_black_pieces(piece, init_pos, final_pos)
-  end
-
-  def correct_color_piece?(piece, player)
-    player.chess_color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
-  end
-
   def movement_variables(movement)
     init_pos  = get_pos(movement)
     final_pos = get_pos(movement, 2)
@@ -221,14 +195,6 @@ class ChessTable < Table
 
   def draw_game?
     false
-  end
-
-  def movement_valid?(movement, player)
-    init_pos, final_pos, piece = movement_variables(movement)
-    color = correct_color_piece?(piece, player)
-    check_after_move = check_after_move?(init_pos, final_pos, player)
-    move = some_piece_move?(piece, init_pos, final_pos)
-    color && move && !check_after_move
   end
 end
 
