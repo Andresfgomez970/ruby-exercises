@@ -155,10 +155,21 @@ class ChessTable < Table
     update_castling_dictionary([7, 0], BLACK_ROOK, black_king_moved, 'black-left')
   end
 
-  def update_state_variables(init_pos, final_pos)
+  def update_last_piece_moved(init_pos, final_pos)
     @last_piece_moved = { 'final_pos': final_pos, 'forward_distance': (init_pos[0] - final_pos[0]).abs }
+  end
+
+  def update_state_variables(movement)
+    init_pos  = get_pos(movement)
+    final_pos = get_pos(movement, 2)
+    update_last_piece_moved(init_pos, final_pos)
     update_king_positions(final_pos)
     update_castling_state
+  end
+
+  def update_table_state(movement)
+    move_piece(movement)
+    update_state_variables(movement)
   end
 
   def move_piece(movement)
@@ -169,7 +180,6 @@ class ChessTable < Table
     init_pos  = get_pos(movement)
     final_pos = get_pos(movement, 2)
     draw_moved_piece(init_pos, final_pos)
-    update_state_variables(init_pos, final_pos)
   end
 
   def check_white_pieces(piece, init_pos, final_pos)
