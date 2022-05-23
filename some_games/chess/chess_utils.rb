@@ -222,13 +222,18 @@ module ReadingMovementFunctionalities
       player.chess_color == 'white' ? [[0, 4], [0, 2], WHITE_KING] : [[7, 4], [7, 2], BLACK_KING]
     else
       final_pos = get_pos(movement, movement.length - 2)
-      init_pos, piece = search_for_location_and_piece(movement, final_pos)
+      piece = obtain_piece_from_movement()
+      init_pos = search_for_location_and_piece(movement, final_pos)
       [init_pos, final_pos, piece]
     end
   end
 
-  def search_for_location_and_piece(movement, final_pos)
-    [nil, nil]
+  def obtain_piece_from_movement(movement)
+    nil
+  end
+
+  def search_for_possible_location(piece, final_pos)
+    nil
   end
 end
 
