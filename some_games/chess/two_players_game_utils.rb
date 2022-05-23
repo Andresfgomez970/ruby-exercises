@@ -107,4 +107,9 @@ module TwoPLayersGameUtils
       play_recursive
     end
   end
+
+  def play_game
+    prepare_game
+    play_recursive
+  end
 end
