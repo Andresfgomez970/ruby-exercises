@@ -185,9 +185,57 @@ module ChessCheckFunctionalities
   end
 end
 
+# This module makes the correct reading of the strings that can be used in a chess game
+module ReadingMovementFunctionalities
+  def movement_variables(movement, player)
+    from_to_notation = /^[a-h][1-8][a-h][1-8]$/
+    algebraic_notation = /((^(B|K|N|R|Q| ){1}[a-h][1-8]$)|(^(B|K|N|R|Q|e){1}x[a-h][1-8]$)|(O-O)|(O-O-O)){1}/
+
+    if movement.match(from_to_notation)
+      movement_variables_from_to_notation(movement)
+    elsif movement.match(algebraic_notation)
+      movement_variables_algebraic_notation(movement, player)
+    end
+  end
+
+  def get_pos(movement, from = 0)
+    initial_col = movement[0 + from].ord - 'a'.ord
+    initial_row = movement[1 + from].to_i - 1
+    [initial_row, initial_col]
+  end
+
+  def movement_variables_from_to_notation(movement)
+    init_pos  = get_pos(movement)
+    final_pos = get_pos(movement, 2)
+    piece = @pieces_spaces[init_pos[0]][init_pos[1]]
+    [init_pos, final_pos, piece]
+  end
+
+  def movement_variables_algebraic_notation(movement, player)
+    # check for castlings
+    # if the before cases did not return obtain the final position
+    # now, based in the final position assign the initial position if it exist
+    case movement
+    when 'O-O'
+      player.chess_color == 'white' ? [[0, 4], [0, 6], WHITE_KING] : [[7, 4], [7, 6], BLACK_KING]
+    when 'O-O-O'
+      player.chess_color == 'white' ? [[0, 4], [0, 2], WHITE_KING] : [[7, 4], [7, 2], BLACK_KING]
+    else
+      final_pos = get_pos(movement, movement.length - 2)
+      init_pos, piece = search_for_location_and_piece(movement, final_pos)
+      [init_pos, final_pos, piece]
+    end
+  end
+
+  def search_for_location_and_piece(movement, final_pos)
+    [nil, nil]
+  end
+end
+
 # Has all functions that must be true for the next movement to be valid
 module ChessCorrectMovementFunctionalities
   include ChessCheckFunctionalities
+  include ReadingMovementFunctionalities
 
   def correct_color_piece?(piece, player)
     player.chess_color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
@@ -244,7 +292,9 @@ module ChessCorrectMovementFunctionalities
   end
 
   def movement_valid?(movement, player)
-    init_pos, final_pos, piece = movement_variables(movement)
+    init_pos, final_pos, piece = movement_variables(movement, player)
+    return false if piece.nil?
+
     color = correct_color_piece?(piece, player)
     check_after_move = check_after_move?(init_pos, final_pos, player)
     move = some_piece_move?(piece, init_pos, final_pos)
