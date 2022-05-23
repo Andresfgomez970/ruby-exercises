@@ -133,30 +133,6 @@ module ChessCheckFunctionalities
     king_piece_to_watch == piece_in_pos(init_pos)
   end
 
-  def check_after_move?(init_pos, final_pos, player)
-    # save pieces in initial and final position to restablish them
-    saved_piece_init = piece_in_pos(init_pos)
-    saved_piece_final = piece_in_pos(final_pos)
-    # modify king position momentarily for the check to work correctly.
-    was_king_modified = modify_king_position(init_pos, final_pos, player)
-
-    # make the move
-    draw_moved_piece(init_pos, final_pos)
-
-    # check if the actual state is check
-    check_after_move = check?(player)
-
-    ## reestablish pieces to original position
-    # reestablish king position if it was moved
-    modify_king_position(final_pos, init_pos, player) if was_king_modified
-
-    # reestablish pieces
-    @pieces_spaces[init_pos[0]][init_pos[1]] = saved_piece_init
-    @pieces_spaces[final_pos[0]][final_pos[1]] = saved_piece_final
-
-    check_after_move
-  end
-
   def actual_king_pos(player)
     player.chess_color == 'white' ? @white_king_position : @black_king_position
   end
@@ -209,5 +185,72 @@ module ChessCheckFunctionalities
     return check_mate_for_any_move?(steps, actual_pos, same_pieces, player) if check?(player)
 
     false
+  end
+end
+
+# Has all functions that must be true for the next movement to be valid
+module ChessCorrectMovementFunctionalities
+  include ChessCheckFunctionalities
+
+  def correct_color_piece?(piece, player)
+    player.chess_color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
+  end
+
+  def check_after_move?(init_pos, final_pos, player)
+    # save pieces in initial and final position to restablish them
+    saved_piece_init = piece_in_pos(init_pos)
+    saved_piece_final = piece_in_pos(final_pos)
+    # modify king position momentarily for the check to work correctly.
+    was_king_modified = modify_king_position(init_pos, final_pos, player)
+
+    # make the move
+    draw_moved_piece(init_pos, final_pos)
+
+    # check if the actual state is check
+    check_after_move = check?(player)
+
+    ## reestablish pieces to original position
+    # reestablish king position if it was moved
+    modify_king_position(final_pos, init_pos, player) if was_king_modified
+
+    # reestablish pieces
+    @pieces_spaces[init_pos[0]][init_pos[1]] = saved_piece_init
+    @pieces_spaces[final_pos[0]][final_pos[1]] = saved_piece_final
+
+    check_after_move
+  end
+
+  def check_white_pieces(piece, init_pos, final_pos)
+    case piece
+    when WHITE_PAWN then pawn_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_BISHOP then bishop_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_ROOK then rook_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_KNIGHT then knight_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_QUEEN then queen_movement_valid?(init_pos, final_pos, 1)
+    when WHITE_KING then king_movement_valid?(init_pos, final_pos, 1)
+    end
+  end
+
+  def check_black_pieces(piece, init_pos, final_pos)
+    case piece
+    when BLACK_PAWN then pawn_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_BISHOP then bishop_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_ROOK then rook_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_KNIGHT then knight_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_QUEEN then queen_movement_valid?(init_pos, final_pos, -1)
+    when BLACK_KING then king_movement_valid?(init_pos, final_pos, -1)
+    end
+  end
+
+  def some_piece_move?(piece, init_pos, final_pos)
+    check_white_pieces(piece, init_pos, final_pos) || check_black_pieces(piece, init_pos, final_pos)
+  end
+
+  def movement_valid?(movement, player)
+    init_pos, final_pos, piece = movement_variables(movement)
+    color = correct_color_piece?(piece, player)
+    check_after_move = check_after_move?(init_pos, final_pos, player)
+    move = some_piece_move?(piece, init_pos, final_pos)
+    color && move && !check_after_move
   end
 end
