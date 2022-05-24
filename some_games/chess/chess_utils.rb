@@ -1,8 +1,24 @@
 # frozen_string_literal: true
 require_relative 'utils'
 
+# define some basic chess utils useful for the rest of utils
+module BasicChessUtils
+  def actual_king_pos(player)
+    player.chess_color == 'white' ? @white_king_position : @black_king_position
+  end
+
+  def possible_king_steps
+    [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+  end
+
+  def allied_pieces(player)
+    player.chess_color == 'white' ? @white_pieces : @black_pieces
+  end
+end
+
 # functionalities to check for check in chess game
 module ChessCheckFunctionalities
+  include BasicChessUtils
 
   ########
   # Pawns
@@ -31,7 +47,7 @@ module ChessCheckFunctionalities
   end
 
   ########
-  # Rooks and queen in movements like a rook
+  # Function to find alllied and menacing pieces searching for check in rooks, queen and bishop like moevments
   def menacing_and_allied_pieces(sign, check_type)
     case check_type
     when 'rq' then menacing_pieces = { 1 => [BLACK_ROOK, BLACK_QUEEN], -1 => [WHITE_ROOK, WHITE_QUEEN] }[sign]
@@ -41,6 +57,8 @@ module ChessCheckFunctionalities
     [menacing_pieces, same_pieces]
   end
 
+  ########
+  # Rooks and queen in movements like a rook
   def check_of_rooks_or_queen?(pos, sign, return_pos = false)
     menacing_pieces, same_pieces = menacing_and_allied_pieces(sign, 'rq')
     check_states = [[1, 0], [-1, 0], [0, 1], [0, -1]].each.map do |step|
@@ -56,25 +74,13 @@ module ChessCheckFunctionalities
   # Rooks and queen in movements like a bishop
   def check_of_bishops_or_queen?(pos, sign, return_pos = false)
     menacing_pieces, same_pieces = menacing_and_allied_pieces(sign, 'bq')
-    dgright = check_bq_dgright?(pos, menacing_pieces, same_pieces, return_pos)
-    dgleft = check_bq_dgleft?(pos, menacing_pieces, same_pieces, return_pos)
-    dgright || dgleft
-  end
+    check_states = [[1, 1], [-1, -1], [1, - 1], [-1, 1]].each.map do |s|
+      n_steps = 2.times.map { |i| 7 * heaviside(s[i]) - pos[i] * s[i] }.min
+      check_along?(pos, menacing_pieces, same_pieces, n_steps, s, return_pos)
+    end
+    return check_states.reduce(true) { |_, el| el != true ? el : true } if return_pos
 
-  def check_bq_dgright?(pos, menacing_pieces, same_pieces, return_pos = false)
-    up_diag_steps = [7 - pos[0], pos[1]].min # up, right min
-    up_part = check_along?(pos, menacing_pieces, same_pieces, up_diag_steps, [1, 1], return_pos)
-    down_diag_steps = [pos[0], pos[1]].min # down, left min
-    down_part = check_along?(pos, menacing_pieces, same_pieces, down_diag_steps, [-1, -1], return_pos)
-    up_part || down_part
-  end
-
-  def check_bq_dgleft?(pos, menacing_pieces, same_pieces, return_pos = false)
-    up_diag_steps = [7 - pos[0], pos[1]].min # up, left min
-    up_part = check_along?(pos, menacing_pieces, same_pieces, up_diag_steps, [1, -1], return_pos)
-    down_diag_steps = [pos[0], 7 - pos[1]].min # down, right min
-    down_part = check_along?(pos, menacing_pieces, same_pieces, down_diag_steps, [-1, 1], return_pos)
-    up_part || down_part
+    check_states.all?
   end
 
   ########
@@ -120,28 +126,6 @@ module ChessCheckFunctionalities
     piece_can_be_eaten?(king_pos, sign)
   end
 
-  def modify_king_position(init_pos, final_pos, player)
-    king_piece_to_watch = player.chess_color == 'white' ? WHITE_KING : BLACK_KING
-    if king_piece_to_watch == piece_in_pos(init_pos) && king_piece_to_watch == WHITE_KING
-      @white_king_position = final_pos
-    elsif king_piece_to_watch == piece_in_pos(init_pos) && king_piece_to_watch == BLACK_KING
-      @black_king_position = final_pos
-    end
-    king_piece_to_watch == piece_in_pos(init_pos)
-  end
-
-  def actual_king_pos(player)
-    player.chess_color == 'white' ? @white_king_position : @black_king_position
-  end
-
-  def possible_king_steps
-    [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
-  end
-
-  def allied_pieces(player)
-    player.chess_color == 'white' ? @white_pieces : @black_pieces
-  end
-
   def find_menacing_piece_pos(player)
     king_pos, sign = player.chess_color == 'white' ? [@white_king_position, 1] : [@black_king_position, -1]
     possibilities = { 'pawns'=> check_of_pawns?(king_pos, sign, true),
@@ -166,9 +150,12 @@ module ChessCheckFunctionalities
   def check_mate_for_any_move?(steps, actual_pos, same_pieces, player)
     steps.each do |step|
       next_pos = actual_pos.sum_array(step)
+      # positions where the king can't move are skipped
       next unless king_can_move?(same_pieces, next_pos)
+      # if the king can move we inspect if it ends up in check
       return false unless check_after_move?(actual_pos, next_pos, player)
     end
+    # with no movements, we return false only if the piece can be eaten
     return false if menace_can_be_eaten?(player)
 
     check?(player)
@@ -179,9 +166,8 @@ module ChessCheckFunctionalities
     steps = possible_king_steps
     actual_pos = actual_king_pos(player)
     same_pieces = allied_pieces(player)
-    return check_mate_for_any_move?(steps, actual_pos, same_pieces, player) if check?(player)
-
-    false
+    check_for_any_move = check_mate_for_any_move?(steps, actual_pos, same_pieces, player)
+    check_for_any_move ? true : false
   end
 end
 
@@ -244,6 +230,19 @@ module ChessCorrectMovementFunctionalities
 
   def correct_color_piece?(piece, player)
     player.chess_color == 'white' ? @white_pieces.include?(piece) : @black_pieces.include?(piece)
+  end
+
+  def modify_king_position(init_pos, final_pos)
+    case piece_in_pos(init_pos)
+    when WHITE_KING
+      @white_king_position = final_pos
+      true
+    when BLACK_KING
+      @black_king_position = final_pos
+      true
+    else
+      false
+    end
   end
 
   def check_after_move?(init_pos, final_pos, player)
