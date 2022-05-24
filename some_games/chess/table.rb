@@ -75,10 +75,10 @@ class ChessTable < Table
   include PawnValidMoves
   include BishopValidMoves
   include RookValidMoves
-  include ChessCheckFunctionalities
   include QueenValidMoves
   include KingValidMoves
   include KnightValidMoves
+  include ChessCheckFunctionalities
   include ChessCorrectMovementFunctionalities
   include ReadingMovementFunctionalities
 
@@ -137,17 +137,15 @@ class ChessTable < Table
     @black_king_position = piece_in_pos(final_pos) == BLACK_KING ? final_pos : @black_king_position
   end
 
-  def update_castling_dictionary(pos, piece, king_moved, modify_key)
-    @castling_is_first_move[modify_key] = false if piece_in_pos(pos) != piece || king_moved
+  def update_castling_dictionary(pos, pieces, king_moved, modify_key)
+    @castling_is_first_move[modify_key] = false if !pieces.include?(piece_in_pos(pos)) || king_moved
   end
 
   def update_castling_state
-    white_king_moved = @white_king_position != [0, 4]
-    black_king_moved = @black_king_position != [7, 4]
-    update_castling_dictionary([0, 7], WHITE_ROOK, white_king_moved, 'white-right')
-    update_castling_dictionary([0, 0], WHITE_ROOK, white_king_moved, 'white-left')
-    update_castling_dictionary([7, 7], BLACK_ROOK, black_king_moved, 'black-right')
-    update_castling_dictionary([7, 0], BLACK_ROOK, black_king_moved, 'black-left')
+    wkm = @white_king_position != [0, 4]  # white king moved
+    bkm = @black_king_position != [7, 4]  # black king moved
+    s = { [0, 7] => 'white-right', [0, 0] => 'white-left', [7, 7] => 'black-right', [7, 0] => 'black-left' }
+    s.each { |key, val| update_castling_dictionary(key, [WHITE_ROOK, BLACK_ROOK], val.include?('w') ? wkm : bkm, val) }
   end
 
   def update_last_piece_moved(init_pos, final_pos)
