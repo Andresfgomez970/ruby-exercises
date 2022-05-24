@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative 'utils'
 
 # define some basic chess utils useful for the rest of utils
@@ -13,6 +14,15 @@ module BasicChessUtils
 
   def allied_pieces(player)
     player.chess_color == 'white' ? @white_pieces : @black_pieces
+  end
+
+  def acronym_to_piece
+    { 'bB' => BLACK_BISHOP, 'bK' => BLACK_KING, 'bQ' => BLACK_QUEEN,
+      'bR' => BLACK_ROOK, 'be' => BLACK_PAWN, 'bN' => BLACK_KNIGHT,
+      'wB' => WHITE_BISHOP, 'wK' => WHITE_KING, 'wQ' => WHITE_QUEEN,
+      'wR' => WHITE_ROOK, 'we' => WHITE_PAWN, 'wN' => WHITE_KNIGHT,
+      'b' => BLACK_PAWN, 'w' => BLACK_PAWN
+    }
   end
 end
 
@@ -173,6 +183,8 @@ end
 
 # This module makes the correct reading of the strings that can be used in a chess game
 module ReadingMovementFunctionalities
+  include BasicChessUtils
+
   def movement_variables(movement, player)
     from_to_notation = /^[a-h][1-8][a-h][1-8]$/
     algebraic_notation = /((^(B|K|N|R|Q| ){1}[a-h][1-8]$)|(^(B|K|N|R|Q|e){1}x[a-h][1-8]$)|(O-O)|(O-O-O)){1}/
@@ -202,23 +214,28 @@ module ReadingMovementFunctionalities
     # if the before cases did not return obtain the final position
     # now, based in the final position assign the initial position if it exist
     case movement
-    when 'O-O'
-      player.chess_color == 'white' ? [[0, 4], [0, 6], WHITE_KING] : [[7, 4], [7, 6], BLACK_KING]
-    when 'O-O-O'
-      player.chess_color == 'white' ? [[0, 4], [0, 2], WHITE_KING] : [[7, 4], [7, 2], BLACK_KING]
+    when 'O-O' then player.chess_color == 'white' ? [[0, 4], [0, 6], WHITE_KING] : [[7, 4], [7, 6], BLACK_KING]
+    when 'O-O-O' then player.chess_color == 'white' ? [[0, 4], [0, 2], WHITE_KING] : [[7, 4], [7, 2], BLACK_KING]
     else
       final_pos = get_pos(movement, movement.length - 2)
-      piece = obtain_piece_from_movement()
+      piece = obtain_piece_from_movement(movement, player)
       init_pos = search_for_location_and_piece(movement, final_pos)
       [init_pos, final_pos, piece]
     end
   end
 
-  def obtain_piece_from_movement(movement)
-    nil
+  def obtain_piece_from_movement(movement, player)
+    movement = movement[0..-3]
+    color = player.chess_color == 'white' ? 'w' : 'b'
+    if movement.contains?('x')
+      acronym_to_piece[color + movement[0]]
+    else
+      acronym_to_piece[color + movement]
+    end
   end
 
   def search_for_possible_location(piece, final_pos)
+    # check depending of the pirce the check_of_pawns etc ...
     nil
   end
 end
